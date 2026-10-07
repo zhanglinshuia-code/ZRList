@@ -1,0 +1,25 @@
+# Publish only the distributable UPM package and public repository files.
+# The local Unity development project, tests, tools and caches stay on disk.
+/*
+!/.gitignore
+!/.gitattributes
+!/.editorconfig
+!/README.md
+!/LICENSE
+!/NOTICE
+!/Packages/
+/Packages/*
+!/Packages/com.zr.list/
+
+# Generated files must never enter the package.
+**/.DS_Store
+**/Thumbs.db
+**/.idea/
+**/.vs/
+**/*.csproj
+**/*.sln
+**/*.slnx
+**/*.user
+**/*.log
+**/*.tmp
+**/*.bak

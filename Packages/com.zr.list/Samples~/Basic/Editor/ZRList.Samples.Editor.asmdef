@@ -1,0 +1,6 @@
+{
+    "name": "ZRList.Samples.Editor",
+    "rootNamespace": "ZRList.Samples.Editor",
+    "references": ["ZRList.Runtime", "ZRList.Samples", "UnityEngine.UI"],
+    "includePlatforms": ["Editor"]
+}

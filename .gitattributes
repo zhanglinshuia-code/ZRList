@@ -1,0 +1,9 @@
+* text=auto eol=lf
+*.cs text diff=csharp
+# Unity emits a trailing space for empty YAML values.
+*.unity text whitespace=-blank-at-eol
+*.prefab text whitespace=-blank-at-eol
+*.asset text whitespace=-blank-at-eol
+*.meta text whitespace=-blank-at-eol
+*.png binary
+*.jpg binary

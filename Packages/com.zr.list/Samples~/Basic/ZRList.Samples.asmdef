@@ -1,0 +1,8 @@
+{
+    "name": "ZRList.Samples",
+    "rootNamespace": "ZRList.Samples",
+    "references": [
+        "ZRList.Runtime",
+        "UnityEngine.UI"
+    ]
+}
