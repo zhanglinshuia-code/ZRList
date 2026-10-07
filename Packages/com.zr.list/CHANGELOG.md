@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1 — 2026-10-07
+
+- 最低支持版本调整为 Unity 2021.3 LTS，兼容 Unity 6。
+- 十个示例在启动时根据输入后端配置 EventSystem，支持旧 Input Manager、新 Input System 和 Both；修复仅启用 Input System 时读取 UnityEngine.Input 的异常。
+- Input System 保持可选依赖，提供示例用的链接保留配置，避免播放器构建裁剪动态加载的输入模块。
+- 场景生成器同步使用自动输入配置，并兼容旧版 Unity 的 Arial 和新版 Unity 的 LegacyRuntime 内置字体。
+- 补充安装升级与重新导入示例的说明。
+
 ## 1.0.0 — 2026-10-07
 
 首次公开发布 ZRList。

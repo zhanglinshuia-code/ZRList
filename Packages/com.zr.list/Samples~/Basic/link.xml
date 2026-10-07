@@ -1,0 +1,6 @@
+<linker>
+  <!-- The sample resolves this optional component by name at startup. -->
+  <assembly fullname="Unity.InputSystem" ignoreIfMissing="true">
+    <type fullname="UnityEngine.InputSystem.UI.InputSystemUIInputModule" preserve="all" />
+  </assembly>
+</linker>

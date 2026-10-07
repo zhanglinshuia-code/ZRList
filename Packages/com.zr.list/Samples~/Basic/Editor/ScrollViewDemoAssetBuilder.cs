@@ -273,7 +273,11 @@ namespace ZRList.Samples.Editor
             }
 
             s_root = Path.GetDirectoryName(Path.GetDirectoryName(AssetDatabase.GUIDToAssetPath(scripts[0]))).Replace('\\', '/');
+#if UNITY_2022_2_OR_NEWER
             s_font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+#else
+            s_font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+#endif
             Directory.CreateDirectory(s_root + "/Prefabs/Showcase");
             Directory.CreateDirectory(s_root + "/Scenes");
             AssetDatabase.Refresh();
@@ -424,7 +428,7 @@ namespace ZRList.Samples.Editor
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1280f, 720f);
             scaler.matchWidthOrHeight = 0.5f;
-            new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
+            new GameObject("EventSystem", typeof(EventSystem), typeof(Support.DemoInputModule));
             DrawText("Eyebrow", canvas.transform, new Vector2(56f, -24f), new Vector2(1150f, 20f), "ZRLIST  /  " + number, 12, s_accent, FontStyle.Bold);
             DrawText("Title", canvas.transform, new Vector2(56f, -52f), new Vector2(1150f, 46f), title, 36, s_text, FontStyle.Bold);
             DrawText("Subtitle", canvas.transform, new Vector2(56f, -104f), new Vector2(1150f, 24f), subtitle, 16, s_muted);

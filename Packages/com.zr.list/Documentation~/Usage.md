@@ -2,6 +2,14 @@
 
 安装方式见[包说明](../README.md)。以下示例路径均相对于 Package Manager 导入的 **ZRList Demos** 目录。
 
+## Unity 与输入兼容性
+
+最低支持 Unity 2021.3 LTS。示例 EventSystem 上的 `DemoInputModule` 会在首帧前选择输入模块：启用 Input System 时使用 `InputSystemUIInputModule`，否则使用 `StandaloneInputModule`。Both 模式优先使用 Input System，避免两个模块同时处理输入；未安装 Input System 时也能编译和运行。
+
+无需更改宿主工程的 Active Input Handling。场景生成器保存相同配置，输入模块由示例自行初始化。示例中的 `link.xml` 保留可选输入模块，构建播放器时请与示例脚本一起保留。运行库仅依赖 uGUI，不强制安装 Input System。
+
+包升级不会自动修改已导入的旧场景。请重新导入新版 Samples，或在自定义旧场景的 EventSystem 上将 `StandaloneInputModule` 替换成 `DemoInputModule`。
+
 ## 示例场景与预制体
 
 | 场景（`Scenes/`） | 内容与交互 |

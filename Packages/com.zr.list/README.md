@@ -2,8 +2,8 @@
 
 Unity uGUI 虚拟列表与网格。只创建和复用可见项，支持横向、竖向、动态尺寸、多种预制体、嵌套滚动和动画定位。
 
-- Unity **2022.3+**；已在 **2022.3.5f1** 验证。
-- UPM 包：`com.zr.list`，版本 **1.0.0**。
+- Unity **2021.3 LTS 及以上**，支持 Unity 6。
+- UPM 包：`com.zr.list`，版本 **1.0.1**。
 - 运行库仅依赖 `com.unity.ugui`。
 - 许可证：[Apache-2.0](LICENSE.md)。
 
@@ -12,12 +12,36 @@ Unity uGUI 虚拟列表与网格。只创建和复用可见项，支持横向、
 Unity 菜单 **Window → Package Manager → + → Add package from git URL**，输入：
 
 ```text
-https://github.com/zhanglinshuia-code/ZRList.git?path=/Packages/com.zr.list#v1.0.0
+https://github.com/zhanglinshuia-code/ZRList.git?path=/Packages/com.zr.list#v1.0.1
 ```
 
 也可以下载仓库，在 Package Manager 中选择 **Add package from disk**，打开 `Packages/com.zr.list/package.json`。
 
 安装后展开包的 **Samples**，导入 **ZRList Demos**。打开导入目录中的 `Scenes` 场景即可运行；仓库提供 UPM 包，示例由 Unity 导入你的工程。
+
+## Unity 版本与输入系统
+
+示例根据宿主工程的 **Active Input Handling** 自动选择输入模块：
+
+| 工程设置 | 示例使用的输入模块 |
+| --- | --- |
+| Input Manager (Old)，未安装 Input System 包 | `StandaloneInputModule` |
+| Input System Package (New) | `InputSystemUIInputModule` |
+| Both，已启用 Input System | `InputSystemUIInputModule` |
+
+无需切换工程输入设置。Input System 是可选依赖，运行库仍仅依赖 uGUI。十个场景的 EventSystem 都由 `DemoInputModule` 在首次更新前配置，场景生成器也采用相同方式。
+
+已实际验证以下组合，均运行十个示例并检查 EventSystem 的点击、拖拽、滚轮和聊天输入框聚焦：
+
+| Unity 版本 | 已验证的输入模式 |
+| --- | --- |
+| 2021.3.45f1 | Input Manager、Input System 1.11.2 |
+| 2022.3.5f1 | Input Manager |
+| 6000.3.11f1 | Input Manager、Input System 1.19.0、Both |
+
+另外通过 Unity 6 的 Windows IL2CPP 播放器验证（High 级别代码裁剪、Input System），以及 Unity 2021.3 的场景重新生成验证。
+
+从 **1.0.0 升级**：更新上面的 Git URL 至 `#v1.0.1` 后，在 Package Manager 中重新导入 **ZRList Demos**，运行新版本导入目录中的场景。Unity 不会自动更新之前复制到 `Assets/Samples` 的旧示例；自定义过的旧场景，可将 EventSystem 上的 `StandaloneInputModule` 替换为 `DemoInputModule`。
 
 ## 快速接入
 
