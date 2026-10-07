@@ -7,3 +7,4 @@
 *.meta text whitespace=-blank-at-eol
 *.png binary
 *.jpg binary
+*.gif binary

@@ -101,6 +101,24 @@ void OnItemRender(ScrollItemView item, int dataIndex)
 
 `VirtualGridView` 按行虚拟化；示例中的 `DirectGridView` 按格子直接复用。两者的布局和接入方式见[网格说明](Packages/com.zr.list/Documentation~/Usage.md#背包网格)。
 
+### 聊天列表（Chat）
+
+多种消息模板、动态气泡高度，以及消息发送和回复。
+
+![聊天列表：动态气泡高度、发送和回复](Packages/com.zr.list/Documentation~/Images/chat.gif)
+
+### 曲线列表（CurvedScroll）
+
+圆弧与自定义曲线、切线旋转，配合虚拟化复用展示卡片。
+
+![曲线列表：圆弧、自定义曲线和切线旋转](Packages/com.zr.list/Documentation~/Images/curved.gif)
+
+### 奖励逐个展示（DirectRewardReveal）
+
+无行节点的奖励网格，支持逐个弹出、重播和跳过动画。
+
+![奖励展示：逐个弹出、重播和跳过动画](Packages/com.zr.list/Documentation~/Images/reveal.gif)
+
 ## 包结构
 
 ```text
