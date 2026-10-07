@@ -9,15 +9,29 @@ Unity uGUI 虚拟列表与网格。只创建和复用可见项，支持横向、
 
 ## 安装
 
-Unity 菜单 **Window → Package Manager → + → Add package from git URL**，输入：
+默认跟踪 `main` 分支，方便后续通过 Package Manager 更新。Unity 菜单 **Window → Package Manager → + → Add package from git URL**，输入：
 
 ```text
-https://github.com/zhanglinshuia-code/ZRList.git?path=/Packages/com.zr.list#v1.0.1
+https://github.com/zhanglinshuia-code/ZRList.git?path=/Packages/com.zr.list#main
 ```
 
 也可以下载仓库，在 Package Manager 中选择 **Add package from disk**，打开 `Packages/com.zr.list/package.json`。
 
 安装后展开包的 **Samples**，导入 **ZRList Demos**。打开导入目录中的 `Scenes` 场景即可运行；仓库提供 UPM 包，示例由 Unity 导入你的工程。
+
+需要固定到某个发布版本时，可以使用标签地址，例如：
+
+```text
+https://github.com/zhanglinshuia-code/ZRList.git?path=/Packages/com.zr.list#v1.0.1
+```
+
+## 升级
+
+- **通过 `#main` 安装**：在 Package Manager 中选中 **ZRList**，点击 **Update** 获取主分支最新提交。若当前 Unity 版本没有该按钮，再通过 **Add package from git URL** 输入同一个 `#main` 地址即可刷新。远端发布新提交后，需要主动更新，包不会自动变化。
+- **通过 `#v1.0.0` 等标签安装**：版本已固定，**Update 不会自动切换到新标签**。通过 **Add package from git URL** 输入新的标签地址即可升级；也可以改用上面的 `#main` 地址，之后跟随主分支更新。重新添加 URL 会更新已有的同名包，无需先卸载。
+- **更新示例**：包升级后，在 **Samples → ZRList Demos** 中重新导入，并打开新版导入目录中的场景。已复制到 `Assets/Samples` 的旧示例不会随包升级自动更新。
+
+Git 包按 URL 指定的分支或标签解析，并通过锁文件记录提交。重新提交 Git URL 会重新解析该引用，具体规则见 [Unity 官方文档](https://docs.unity3d.com/6000.0/Documentation/Manual/upm-git.html#git-locks)。
 
 ## Unity 版本与输入系统
 
@@ -41,7 +55,7 @@ https://github.com/zhanglinshuia-code/ZRList.git?path=/Packages/com.zr.list#v1.0
 
 另外通过 Unity 6 的 Windows IL2CPP 播放器验证（High 级别代码裁剪、Input System），以及 Unity 2021.3 的场景重新生成验证。
 
-从 **1.0.0 升级**：更新上面的 Git URL 至 `#v1.0.1` 后，在 Package Manager 中重新导入 **ZRList Demos**，运行新版本导入目录中的场景。Unity 不会自动更新之前复制到 `Assets/Samples` 的旧示例；自定义过的旧场景，可将 EventSystem 上的 `StandaloneInputModule` 替换为 `DemoInputModule`。
+从 **1.0.0 升级**：按上面的升级步骤安装 `main` 或 `v1.0.1` 及以上版本，并重新导入 **ZRList Demos** 以取得输入兼容修复。自定义过的旧场景，可将 EventSystem 上的 `StandaloneInputModule` 替换为 `DemoInputModule`。
 
 ## 快速接入
 
