@@ -5,6 +5,7 @@
 !/.gitattributes
 !/.editorconfig
 !/README.md
+!/README.en.md
 !/LICENSE
 !/NOTICE
 !/Packages/
