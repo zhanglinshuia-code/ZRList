@@ -20,6 +20,8 @@ namespace ZRList
         internal IScrollItemAdapter OwnerAdapter;
         internal bool IsBound;
         internal RectTransform SourcePrefab;
+        internal int PoolIndex = -1;
+        internal int PrefabPoolIndex = -1;
         public RectTransform Prefab
         {
             get
@@ -75,6 +77,7 @@ namespace ZRList
             OwnerAdapter = null;
             IsBound = false;
             SourcePrefab = null;
+            PoolIndex = PrefabPoolIndex = -1;
         }
     }
 }

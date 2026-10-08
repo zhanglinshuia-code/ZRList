@@ -153,7 +153,7 @@ Packages/com.zr.list/
   NOTICE
 ```
 
-Samples enter your project's compilation only after import. The local development project, internal regression tools, Library, IDE settings, and build outputs are not part of the distributed package.
+Samples enter your project's compilation only after import.
 
 ## Documentation and feedback
 

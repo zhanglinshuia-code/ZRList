@@ -52,9 +52,16 @@ namespace ZRList
             m_jumpDuration = Mathf.Max(0f, duration);
             IsAnimatingJump = true;
             try {
-                JumpTargetOffset = GetJumpPosition(index, out _, out m_jumpAtEnd);
+                JumpTargetOffset = GetJumpPosition(index, out int first, out m_jumpAtEnd);
                 if (m_jumpDuration == 0f) {
-                    CompleteJump();
+                    // Recycling the measuring view can enqueue a new size. In
+                    // that case resolve again before using the prepared target.
+                    if (HasPendingRenderWork) {
+                        CompleteJump();
+                    }
+                    else {
+                        CompleteJump(first, JumpTargetOffset);
+                    }
                 }
                 else {
                     FlushPendingUpdates();
@@ -128,7 +135,20 @@ namespace ZRList
         private void CompleteJump()
         {
             float offset = GetJumpPosition(m_activeJumpIndex, out int first, out m_jumpAtEnd);
+            CompleteJump(first, offset);
+        }
+
+        private void CompleteJump(int first, float offset)
+        {
+            long sizeVersion = m_sizeIndex.Version;
             RenderViewport(first, offset);
+            if (m_jumpAtEnd && sizeVersion == m_sizeIndex.Version && !HasPendingRenderWork) {
+                m_resolvedEndFirstIndex = first;
+                m_resolvedEndOffset = offset;
+                m_resolvedEndSizeVersion = sizeVersion;
+                m_hasResolvedEnd = true;
+            }
+
             CancelActiveJump();
             JumpElapsedTime = JumpTargetOffset = 0f;
             FlushPendingUpdates();

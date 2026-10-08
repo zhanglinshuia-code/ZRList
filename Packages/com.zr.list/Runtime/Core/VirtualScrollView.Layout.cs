@@ -3,12 +3,43 @@
 
 using System;
 using System.Collections.Generic;
+using Unity.Profiling;
 using UnityEngine;
 
 namespace ZRList
 {
     public partial class VirtualScrollView
     {
+        private static readonly ProfilerMarker s_layoutCheckMarker = new ProfilerMarker("ZRList.CheckLayout");
+        private static readonly ProfilerMarker s_rangeLookupMarker = new ProfilerMarker("ZRList.RangeLookup");
+        private static readonly ProfilerMarker s_rebuildMarker = new ProfilerMarker("ZRList.RebuildViewport");
+        private static readonly ProfilerMarker s_prefabMarker = new ProfilerMarker("ZRList.SelectPrefab");
+        private static readonly ProfilerMarker s_bindMarker = new ProfilerMarker("ZRList.Bind");
+        private static readonly ProfilerMarker s_sizeQueryMarker = new ProfilerMarker("ZRList.QuerySize");
+        private static readonly ProfilerMarker s_measureMarker = new ProfilerMarker("ZRList.Measure");
+        private bool m_hasRenderedRange;
+        private int m_renderedFirstIndex;
+        private int m_renderedLastIndex;
+        private long m_renderedSizeVersion;
+        private bool m_hasResolvedEnd;
+        private int m_resolvedEndFirstIndex;
+        private float m_resolvedEndOffset;
+        private long m_resolvedEndSizeVersion;
+
+        private bool HasPendingRenderWork
+        {
+            get
+            {
+                return m_refreshAll || m_deferredLayoutRefresh || m_dirtyItems.Count > 0 || m_pendingSizes.Count > 0 || m_committingSizes.Count > 0;
+            }
+        }
+
+        private void InvalidateRenderCache()
+        {
+            m_hasRenderedRange = false;
+            m_hasResolvedEnd = false;
+        }
+
         private void BindHolder(ScrollItemView holder, int viewIndex)
         {
             UnbindHolder(holder);
@@ -24,7 +55,9 @@ namespace ZRList
             m_dirtyItems.Remove(viewIndex);
             holder.IsBound = true;
             try {
-                m_adapter.Bind(holder, holder.ItemIndex, context);
+                using (s_bindMarker.Auto()) {
+                    m_adapter.Bind(holder, holder.ItemIndex, context);
+                }
             }
             catch {
                 UnbindHolder(holder);
@@ -60,12 +93,15 @@ namespace ZRList
             }
 
             ScrollItemLayoutContext context = GetItemLayoutContext(holder.SourcePrefab);
-            if (m_adapter.TryGetItemSize(GetDataIndex(viewIndex), context, out float supplied)) {
+            if (TryGetAdapterSize(viewIndex, context, out float supplied)) {
                 StoreSize(viewIndex, supplied);
                 return supplied;
             }
 
-            float measured = m_adapter.MeasureItem(holder, GetDataIndex(viewIndex), context);
+            float measured;
+            using (s_measureMarker.Auto()) {
+                measured = m_adapter.MeasureItem(holder, GetDataIndex(viewIndex), context);
+            }
             // A measurement notification for this item is part of this transaction.
             if (ApplyPendingSize(viewIndex)) {
                 return m_sizeIndex.GetSize(viewIndex);
@@ -77,31 +113,24 @@ namespace ZRList
 
         internal ScrollItemView ExtractRecyclableViewsHolderOrCreateNew(int viewIndex)
         {
-            RectTransform prefab = GetItemPrefab(viewIndex);
-            for (var index = RecycledItemViews.Count - 1; index >= 0; --index) {
-                ScrollItemView holder = RecycledItemViews[index];
-                if (holder == null || holder.Root == null) {
-                    RecycledItemViews.RemoveAt(index);
-                    continue;
-                }
-
-                if (holder.SourcePrefab == prefab) {
-                    RecycledItemViews.RemoveAt(index);
-                    return holder;
-                }
-            }
-
-            return CreateViewsHolder(viewIndex);
+            return ExtractRecyclableViewsHolderOrCreateNew(GetItemPrefab(viewIndex));
         }
 
         private RectTransform GetItemPrefab(int viewIndex)
         {
+            using var profileScope = s_prefabMarker.Auto();
             RectTransform prefab = m_adapter is IScrollItemPrefabProvider provider ? provider.GetItemPrefab(GetDataIndex(viewIndex)) : FirstItemPrefab;
             if (prefab == null) {
                 throw new InvalidOperationException("The item prefab provider returned a null prefab.");
             }
 
             return prefab;
+        }
+
+        private bool TryGetAdapterSize(int viewIndex, ScrollItemLayoutContext context, out float size)
+        {
+            using var profileScope = s_sizeQueryMarker.Auto();
+            return m_adapter.TryGetItemSize(GetDataIndex(viewIndex), context, out size);
         }
 
         private ScrollItemLayoutContext GetItemLayoutContext(RectTransform prefab)
@@ -115,6 +144,11 @@ namespace ZRList
 
         protected ScrollItemView CreateViewsHolder(int viewIndex)
         {
+            return CreateViewsHolder(GetItemPrefab(viewIndex));
+        }
+
+        private ScrollItemView CreateViewsHolder(RectTransform prefab)
+        {
             if (m_poolRoot == null) {
                 var container = new GameObject("VirtualScrollView pool", typeof(RectTransform));
                 container.SetActive(false);
@@ -122,7 +156,6 @@ namespace ZRList
                 m_poolRoot.SetParent(transform, false);
             }
 
-            RectTransform prefab = GetItemPrefab(viewIndex);
             var root = (RectTransform)Instantiate(prefab.gameObject, m_poolRoot, false).transform;
             root.gameObject.SetActive(false);
             root.SetParent(Content, false);
@@ -159,12 +192,13 @@ namespace ZRList
                 holder.Root.gameObject.SetActive(false);
                 holder.ItemIndex = holder.ViewIndex = -1;
                 holder.BindingVersion = ++m_bindingVersion;
-                RecycledItemViews.Add(holder);
+                AddPooledHolder(holder);
             }
         }
 
         private void RecycleAllVisible()
         {
+            InvalidateRenderCache();
             Exception firstError = null;
             foreach (ScrollItemView holder in VisibleItemViews) {
                 try {
@@ -215,27 +249,72 @@ namespace ZRList
                 return;
             }
 
+            if (forceBind || HasPendingRenderWork) {
+                m_hasResolvedEnd = false;
+            }
+
             if (!IsAnimatingJump && offset >= MaxOffset && MaxOffset > 0f) {
                 // Preserve elastic overscroll while discovering the actual end sizes.
                 float overscroll = offset - MaxOffset;
-                float end = GetJumpPosition(m_sizeIndex.Count - 1, out int first, out _);
-                RenderViewport(first, end + overscroll, forceBind);
+                if (!m_hasResolvedEnd || m_resolvedEndSizeVersion != m_sizeIndex.Version) {
+                    InvalidateRenderCache();
+                    m_resolvedEndOffset = GetJumpPosition(m_sizeIndex.Count - 1, out m_resolvedEndFirstIndex, out _);
+                    m_resolvedEndSizeVersion = m_sizeIndex.Version;
+                }
+
+                RenderRangeIfChanged(m_resolvedEndFirstIndex, m_resolvedEndOffset + overscroll, forceBind);
+                m_hasResolvedEnd = m_resolvedEndSizeVersion == m_sizeIndex.Version && !HasPendingRenderWork;
                 return;
             }
 
-            int index = m_sizeIndex.FindIndex(offset - StartPadding);
-            // The prefix index includes spacing. An item whose end is above the
-            // viewport need not be bound merely because the viewport starts in its gap.
-            if (index + 1 < m_sizeIndex.Count && GetEstimatedItemStart(index) + m_sizeIndex.GetSize(index) <= offset) {
-                ++index;
+            int index;
+            using (s_rangeLookupMarker.Auto()) {
+                index = m_sizeIndex.FindIndex(offset - StartPadding);
+                // The prefix index includes spacing. An item whose end is above the
+                // viewport need not be bound merely because the viewport starts in its gap.
+                if (index + 1 < m_sizeIndex.Count && GetEstimatedItemStart(index) + m_sizeIndex.GetSize(index) <= offset) {
+                    ++index;
+                }
             }
 
-            RenderViewport(index, offset, forceBind);
+            RenderRangeIfChanged(index, offset, forceBind);
+        }
+
+        private void RenderRangeIfChanged(int firstIndex, float offset, bool forceBind)
+        {
+            if (!forceBind && !HasPendingRenderWork && m_hasRenderedRange && m_renderedSizeVersion == m_sizeIndex.Version) {
+                int lastIndex = FindLastRenderedIndex(firstIndex, offset);
+                if (firstIndex == m_renderedFirstIndex && lastIndex == m_renderedLastIndex) {
+                    SetOffset(offset);
+                    return;
+                }
+
+                if (TryUpdateVisibleRange(firstIndex, lastIndex, offset)) {
+                    return;
+                }
+            }
+
+            RenderViewport(firstIndex, offset, forceBind);
+        }
+
+        private int FindLastRenderedIndex(int firstIndex, float offset)
+        {
+            using var profileScope = s_rangeLookupMarker.Auto();
+            // The prefix lookup includes trailing spacing. Only a start strictly
+            // before the viewport end enters; always retain the first item.
+            double end = (double)offset + m_viewportLength;
+            int lastIndex = m_sizeIndex.FindIndex(end - StartPadding);
+            if (StartPadding + m_sizeIndex.PrefixSize(lastIndex) >= end) {
+                --lastIndex;
+            }
+            return Math.Max(firstIndex, lastIndex);
         }
 
         // The same geometry and retention algorithm serves both axes, scrolling and jumping.
         private void RenderViewport(int firstIndex, float offset, bool forceBind = false)
         {
+            using var profileScope = s_rebuildMarker.Auto();
+            m_hasRenderedRange = false;
             m_rebuilding = true;
             try {
                 m_previousVisible.Clear();
@@ -270,15 +349,18 @@ namespace ZRList
 
                     bool retained = m_previousVisible.TryGetValue(index, out ScrollItemView holder);
                     if (retained) {
+                        RectTransform prefab = GetItemPrefab(index);
+                        // Keep ownership until selection succeeds, so a throwing
+                        // provider cannot strand a previously visible holder.
                         m_previousVisible.Remove(index);
-                        if (holder.SourcePrefab != GetItemPrefab(index)) {
+                        if (holder.SourcePrefab != prefab) {
                             Recycle(holder);
-                            holder = ExtractRecyclableViewsHolderOrCreateNew(index);
+                            holder = ExtractRecyclableViewsHolderOrCreateNew(prefab);
                             retained = false;
                         }
                     }
                     else {
-                        holder = ExtractRecyclableViewsHolderOrCreateNew(index);
+                        holder = ExtractRecyclableViewsHolderOrCreateNew(GetItemPrefab(index));
                     }
 
                     VisibleItemViews.Add(holder);
@@ -291,19 +373,9 @@ namespace ZRList
 
                     SetViewsHolderEnabled(holder);
                     float size = needsBind || m_pendingSizes.ContainsKey(index) ? ResolveSize(holder, index) : m_sizeIndex.GetSize(index);
-                    holder.ItemSize = size;
-                    if (holder.Root.rect.size[ScrollAxisIndex] != size) {
-                        holder.Root.SetSizeWithCurrentAnchors((RectTransform.Axis)ScrollAxisIndex, size);
-                    }
+                    LayoutHolder(holder, size, start);
 
-                    Vector2 pos = holder.Root.anchoredPosition;
-                    pos[m_crossAxisIndex] = LayoutIsHorizontal ? -CrossAxisStartPadding - holder.Root.rect.yMax : CrossAxisStartPadding - holder.Root.rect.xMin;
-                    pos[ScrollAxisIndex] = LayoutIsHorizontal ? (float)(start - holder.Root.rect.xMin) : (float)(-start - holder.Root.rect.yMax);
-                    if (holder.Root.anchoredPosition != pos) {
-                        holder.Root.anchoredPosition = pos;
-                    }
-
-                    start += size + ContentSpacing;
+                    start += (double)size + ContentSpacing;
                 }
 
                 SetOffset(offset);
@@ -331,6 +403,41 @@ namespace ZRList
                     m_rebuilding = false;
                 }
             }
+
+            RememberRenderedRange();
+        }
+
+        private void RememberRenderedRange()
+        {
+            // Publish only after binding, positioning and final recycling all
+            // succeed. Measurements can change the range calculated beforehand.
+            if (VisibleItemViews.Count > 0) {
+                m_renderedFirstIndex = VisibleItemViews[0].ViewIndex;
+                m_renderedLastIndex = VisibleItemViews[VisibleItemViews.Count - 1].ViewIndex;
+                m_renderedSizeVersion = m_sizeIndex.Version;
+                m_hasRenderedRange = true;
+            }
+        }
+
+        private void LayoutHolder(ScrollItemView holder, float size, double start)
+        {
+            holder.ItemSize = size;
+            RectTransform root = holder.Root;
+            Rect rect = root.rect;
+            if (rect.size[ScrollAxisIndex] != size) {
+                root.SetSizeWithCurrentAnchors((RectTransform.Axis)ScrollAxisIndex, size);
+                rect = root.rect;
+            }
+
+            // Read geometry after binding/measurement and any size write. Reuse
+            // this snapshot only within this placement, never across callbacks.
+            Vector2 previous = root.anchoredPosition;
+            Vector2 position = previous;
+            position[m_crossAxisIndex] = LayoutIsHorizontal ? -CrossAxisStartPadding - rect.yMax : CrossAxisStartPadding - rect.xMin;
+            position[ScrollAxisIndex] = LayoutIsHorizontal ? (float)(start - rect.xMin) : (float)(-start - rect.yMax);
+            if (previous != position) {
+                root.anchoredPosition = position;
+            }
         }
 
         private float GetJumpSize(int viewIndex, ref ScrollItemView measuringHolder)
@@ -340,7 +447,7 @@ namespace ZRList
             }
 
             RectTransform prefab = GetItemPrefab(viewIndex);
-            if (m_adapter.TryGetItemSize(GetDataIndex(viewIndex), GetItemLayoutContext(prefab), out float size)) {
+            if (TryGetAdapterSize(viewIndex, GetItemLayoutContext(prefab), out float size)) {
                 StoreSize(viewIndex, size);
                 return size;
             }
@@ -351,7 +458,7 @@ namespace ZRList
             }
 
             if (measuringHolder == null) {
-                measuringHolder = ExtractRecyclableViewsHolderOrCreateNew(viewIndex);
+                measuringHolder = ExtractRecyclableViewsHolderOrCreateNew(prefab);
             }
 
             BindHolder(measuringHolder, viewIndex);

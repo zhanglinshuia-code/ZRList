@@ -48,6 +48,9 @@ namespace ZRList.Samples
         private float m_jumpDuration;
         private float m_jumpElapsed;
         private bool m_refreshing;
+        private bool m_hasRenderedRange;
+        private int m_renderedFirst;
+        private int m_renderedEnd;
 
         public bool IsInitialized { get; private set; }
         public int ItemCount { get; private set; }
@@ -186,7 +189,10 @@ namespace ZRList.Samples
 
         private void SetOffset(float offset)
         {
-            Content.anchoredPosition = new Vector2(0f, Mathf.Clamp(offset, 0f, MaxOffset));
+            Vector2 position = new Vector2(0f, Mathf.Clamp(offset, 0f, MaxOffset));
+            if (Content.anchoredPosition != position) {
+                Content.anchoredPosition = position;
+            }
             RefreshVisibleCells();
         }
 
@@ -195,15 +201,22 @@ namespace ZRList.Samples
             if (!IsInitialized || m_refreshing) {
                 return;
             }
+
+            float offset = Mathf.Clamp(Content.anchoredPosition.y, 0f, MaxOffset);
+            float stride = CellSize.y + CellSpacing.y;
+            int firstBand = Mathf.Max(0, Mathf.FloorToInt((offset - ContentPadding.top) / stride));
+            int endBand = Mathf.Max(firstBand + 1, Mathf.CeilToInt((offset + Viewport.rect.height - ContentPadding.top) / stride));
+            int first = (int)Math.Min(ItemCount, (long)firstBand * ResolvedColumnCount);
+            int end = (int)Math.Min(ItemCount, (long)endBand * ResolvedColumnCount);
+            // Content motion already moves its children. Only entering/leaving bands
+            // require pool maintenance; RefreshLayout invalidates this range.
+            if (m_hasRenderedRange && first == m_renderedFirst && end == m_renderedEnd) {
+                return;
+            }
+
+            m_hasRenderedRange = false;
             m_refreshing = true;
             try {
-                float offset = Mathf.Clamp(Content.anchoredPosition.y, 0f, MaxOffset);
-                float stride = CellSize.y + CellSpacing.y;
-                int firstBand = Mathf.Max(0, Mathf.FloorToInt((offset - ContentPadding.top) / stride));
-                int endBand = Mathf.Max(firstBand + 1, Mathf.CeilToInt((offset + Viewport.rect.height - ContentPadding.top) / stride));
-                int first = (int)Math.Min(ItemCount, (long)firstBand * ResolvedColumnCount);
-                int end = (int)Math.Min(ItemCount, (long)endBand * ResolvedColumnCount);
-
                 // Release off-screen cells before acquiring their replacements.
                 for (int index = m_cells.Count - 1; index >= 0; --index) {
                     ScrollItemView cell = m_cells[index];
@@ -236,6 +249,9 @@ namespace ZRList.Samples
                     OnItemRender?.Invoke(cell, dataIndex);
                     cell.Root.gameObject.SetActive(true);
                 }
+                m_renderedFirst = first;
+                m_renderedEnd = end;
+                m_hasRenderedRange = true;
             }
             finally {
                 m_refreshing = false;
@@ -254,6 +270,7 @@ namespace ZRList.Samples
 
         private void RecycleAll()
         {
+            m_hasRenderedRange = false;
             for (int index = m_cells.Count - 1; index >= 0; --index) {
                 RecycleCell(m_cells[index]);
             }

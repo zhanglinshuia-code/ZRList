@@ -14,6 +14,8 @@ namespace ZRList
         private float m_spacing;
         private float m_estimate;
         private double m_totalSize;
+        private int m_searchBit = 1;
+        public long Version { get; private set; }
         public int Count
         {
             get
@@ -32,16 +34,20 @@ namespace ZRList
 
         public void Clear()
         {
+            ++Version;
             m_sizes = Array.Empty<float>();
             m_tree = Array.Empty<double>();
             m_count = 0;
             m_totalSize = 0d;
+            m_searchBit = 1;
         }
 
         public void Reset(int count, float estimatedSize, float itemSpacing)
         {
             EnsureCapacity(count);
+            ++Version;
             m_count = count;
+            UpdateSearchBit();
             m_estimate = estimatedSize;
             m_spacing = itemSpacing;
             double stride = (double)estimatedSize + m_spacing;
@@ -92,6 +98,8 @@ namespace ZRList
             }
 
             m_count = nextCount;
+            ++Version;
+            UpdateSearchBit();
             m_totalSize += count * stride - (previousCount == 0 ? m_spacing : 0d);
         }
 
@@ -108,6 +116,7 @@ namespace ZRList
                 return;
             }
 
+            ++Version;
             m_totalSize += difference;
             for (int i = index + 1; i <= Count; i += i & -i) {
                 m_tree[i] += difference;
@@ -116,6 +125,11 @@ namespace ZRList
 
         public void ChangeSpacing(float itemSpacing)
         {
+            if (m_spacing == itemSpacing) {
+                return;
+            }
+
+            ++Version;
             m_spacing = itemSpacing;
             Array.Clear(m_tree, 0, Count + (m_tree.Length > 0 ? 1 : 0));
             m_totalSize = 0d;
@@ -144,16 +158,19 @@ namespace ZRList
             return total;
         }
 
+        private void UpdateSearchBit()
+        {
+            m_searchBit = 1;
+            while (m_searchBit <= Count / 2) {
+                m_searchBit <<= 1;
+            }
+        }
+
         public int FindIndex(double offset)
         {
             int index = 0;
             double prefix = 0d;
-            int bit = 1;
-            while (bit <= Count / 2) {
-                bit <<= 1;
-            }
-
-            for (; bit > 0; bit >>= 1) {
+            for (int bit = m_searchBit; bit > 0; bit >>= 1) {
                 int next = index + bit;
                 if (next <= Count && prefix + m_tree[next] <= offset) {
                     index = next;

@@ -169,6 +169,8 @@ namespace ZRList
         public float DefaultJumpDuration = 0.5f;
         public readonly List<ScrollItemView> VisibleItemViews = new List<ScrollItemView>();
         public readonly Dictionary<int, ScrollItemView> VisibleItemsByViewIndex = new Dictionary<int, ScrollItemView>();
+        // Legacy inspection surface. Pool membership and ordering are owned by
+        // the list; use TrimPool to release instances rather than editing it.
         protected internal readonly List<ScrollItemView> RecycledItemViews = new List<ScrollItemView>();
         private IReadOnlyList<ScrollItemView> m_readOnlyVisibleItems;
         /// <summary>Live, read-only collection of rendered views in layout order. Use GetVisibleItems for viewport clipping.</summary>
@@ -499,22 +501,30 @@ namespace ZRList
             m_previousContentPosition = 0f;
         }
 
-        internal void EnsureLayoutCurrent()
+        // Only a check with no reconfiguration can be reused by the immediately
+        // following internal operation. Reconfiguration may invoke business code.
+        internal bool EnsureLayoutCurrent()
         {
+            using var profileScope = s_layoutCheckMarker.Auto();
             if (!m_initialized || m_rebuilding || m_flushing || m_preparingLayout || m_updateDepth > 0) {
-                return;
+                return false;
             }
 
             if (ItemsCount != m_sizeIndex.Count || m_layoutContent != Content || m_layoutScrollRect != ScrollRect) {
                 Init(m_adapter);
+                return false;
             }
             else if (HasLayoutChanged() || ConfiguredPrefabsChanged) {
                 RefreshLayout();
+                return false;
             }
+
+            return true;
         }
 
         private void ConfigureLayout(bool forceRevision = true)
         {
+            InvalidateRenderCache();
             if (m_adapter is not IScrollItemPrefabProvider) {
                 ScrollItemPrefabCollection.Validate(ItemPrefabs, null);
             }
@@ -590,7 +600,7 @@ namespace ZRList
 
         public void RefreshVisibleItems()
         {
-            EnsureLayoutCurrent();
+            bool layoutCurrent = EnsureLayoutCurrent();
             if (!m_initialized) {
                 return;
             }
@@ -600,7 +610,7 @@ namespace ZRList
                 m_committingSizes.Remove(item.ViewIndex);
             }
             m_refreshAll = true;
-            FlushPendingUpdates();
+            FlushPendingUpdates(layoutCurrent);
         }
 
         public void RefreshLayout()
@@ -735,8 +745,7 @@ namespace ZRList
                 return;
             }
 
-            EnsureLayoutCurrent();
-            FlushPendingUpdates();
+            FlushPendingUpdates(EnsureLayoutCurrent());
         }
 
         private void OnEnable()
@@ -768,8 +777,7 @@ namespace ZRList
 
             while (RecycledItemViews.Count > 0) {
                 int last = RecycledItemViews.Count - 1;
-                ScrollItemView holder = RecycledItemViews[last];
-                RecycledItemViews.RemoveAt(last);
+                ScrollItemView holder = RemovePooledHolder(last);
                 try {
                     DestroyHolder(holder);
                 }
@@ -780,6 +788,7 @@ namespace ZRList
                 }
             }
 
+            m_poolsByPrefab.Clear();
             if (m_poolRoot != null) {
                 ReleaseRoot(m_poolRoot);
             }
@@ -837,11 +846,15 @@ namespace ZRList
                 throw new InvalidOperationException("Trim the pool outside item callbacks.");
             }
 
-            while (RecycledItemViews.Count > retainedCount) {
-                int last = RecycledItemViews.Count - 1;
-                ScrollItemView holder = RecycledItemViews[last];
-                RecycledItemViews.RemoveAt(last);
-                DestroyHolder(holder);
+            try {
+                while (RecycledItemViews.Count > retainedCount) {
+                    int last = RecycledItemViews.Count - 1;
+                    ScrollItemView holder = RemovePooledHolder(last);
+                    DestroyHolder(holder);
+                }
+            }
+            finally {
+                PruneEmptyPrefabPools();
             }
 
             NotifyViewStateChanged();

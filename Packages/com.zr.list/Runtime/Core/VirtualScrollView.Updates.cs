@@ -137,7 +137,7 @@ namespace ZRList
         /// <summary>Size is along the scroll axis, excluding spacing and padding. Index is a data index.</summary>
         public bool SetItemSize(int dataIndex, float newSize)
         {
-            EnsureLayoutCurrent();
+            bool layoutCurrent = EnsureLayoutCurrent();
             if (!IsValidDataIndex(dataIndex) || !IsValidSize(newSize)) {
                 return false;
             }
@@ -148,7 +148,7 @@ namespace ZRList
             }
 
             m_pendingSizes[viewIndex] = new SizeChange(newSize);
-            FlushPendingUpdates();
+            FlushPendingUpdates(layoutCurrent);
             return true;
         }
 
@@ -190,6 +190,8 @@ namespace ZRList
             }
 
             m_pendingSizes[binding.ViewIndex] = new SizeChange(newSize, binding);
+            // Binding validation reads the overridable ItemIndex property, so
+            // business code may have changed the layout since the first check.
             FlushPendingUpdates();
             return true;
         }
@@ -259,7 +261,7 @@ namespace ZRList
         /// <summary>Rebinds and obtains a fresh size for one rendered data item on the next update.</summary>
         public void RefreshItem(int dataIndex)
         {
-            EnsureLayoutCurrent();
+            bool layoutCurrent = EnsureLayoutCurrent();
             if (!IsValidDataIndex(dataIndex)) {
                 return;
             }
@@ -268,7 +270,7 @@ namespace ZRList
             m_pendingSizes.Remove(viewIndex);
             m_committingSizes.Remove(viewIndex);
             m_dirtyItems.Add(viewIndex);
-            FlushPendingUpdates();
+            FlushPendingUpdates(layoutCurrent);
         }
 
         private struct ViewAnchor
@@ -298,7 +300,14 @@ namespace ZRList
 
         public void FlushPendingUpdates()
         {
-            EnsureLayoutCurrent();
+            FlushPendingUpdates(false);
+        }
+
+        private void FlushPendingUpdates(bool layoutAlreadyCurrent)
+        {
+            if (!layoutAlreadyCurrent) {
+                EnsureLayoutCurrent();
+            }
             if (!m_initialized || !isActiveAndEnabled || m_rebuilding || m_flushing || m_updateDepth > 0) {
                 return;
             }

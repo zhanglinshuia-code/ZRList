@@ -32,9 +32,7 @@ namespace ZRList.Samples
         {
             float progress = Mathf.Clamp01(elapsed / duration);
             if (elapsed <= 0f) {
-                Group.alpha = 0f;
-                Visual.localScale = Vector3.one * 0.55f;
-                Visual.anchoredPosition = new Vector2(0f, -riseDistance);
+                SetVisual(0f, 0.55f, -riseDistance);
                 return;
             }
 
@@ -46,7 +44,8 @@ namespace ZRList.Samples
             float scale;
             if (progress < 0.65f) {
                 float phase = progress / 0.65f;
-                float eased = 1f - Mathf.Pow(1f - phase, 3f);
+                float remaining = 1f - phase;
+                float eased = 1f - remaining * remaining * remaining;
                 scale = Mathf.LerpUnclamped(0.55f, 1f + overshoot, eased);
             }
             else {
@@ -54,9 +53,8 @@ namespace ZRList.Samples
                 scale = Mathf.Lerp(1f + overshoot, 1f, Mathf.SmoothStep(0f, 1f, phase));
             }
 
-            Group.alpha = Mathf.Clamp01(progress * 5f);
-            Visual.localScale = Vector3.one * scale;
-            Visual.anchoredPosition = new Vector2(0f, -riseDistance * Mathf.Pow(1f - progress, 3f));
+            float remainingProgress = 1f - progress;
+            SetVisual(Mathf.Clamp01(progress * 5f), scale, -riseDistance * remainingProgress * remainingProgress * remainingProgress);
         }
 
         public void Unbind()
@@ -68,16 +66,25 @@ namespace ZRList.Samples
 
         private void ResetVisual()
         {
-            if (Group.alpha != 1f) {
-                Group.alpha = 1f;
+            SetVisual(1f, 1f, 0f);
+        }
+
+        private void SetVisual(float alpha, float scale, float positionY)
+        {
+            // Waiting and completed rewards share the timeline but do not change
+            // visually. Avoid dirtying their Canvas/Transform on every frame.
+            if (Group.alpha != alpha) {
+                Group.alpha = alpha;
             }
 
-            if (Visual.localScale != Vector3.one) {
-                Visual.localScale = Vector3.one;
+            Vector3 localScale = Vector3.one * scale;
+            if (Visual.localScale != localScale) {
+                Visual.localScale = localScale;
             }
 
-            if (Visual.anchoredPosition != Vector2.zero) {
-                Visual.anchoredPosition = Vector2.zero;
+            Vector2 position = new Vector2(0f, positionY);
+            if (Visual.anchoredPosition != position) {
+                Visual.anchoredPosition = position;
             }
         }
     }

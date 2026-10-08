@@ -135,7 +135,7 @@ Packages/com.zr.list/
   NOTICE
 ```
 
-示例默认不会参与编译，导入后才进入用户工程。开发工程、内部回归工具、Library、IDE 配置和构建产物不属于发布内容。
+示例默认不会参与编译，导入后才进入用户工程。
 
 ## 文档与反馈
 
@@ -145,5 +145,5 @@ Packages/com.zr.list/
 
 ## 许可证
 
-Copyright 2026 zhanglinshuia-code。代码、文档和包内原创几何示例图标采用 [Apache License 2.0](LICENSE)，与 [ZRAsset](https://github.com/zhanglinshuia-code/ZRAsset/blob/main/LICENSE) 一致。
+Copyright 2026 zhanglinshuia-code。代码、文档和包内原创几何示例图标采用 [Apache License 2.0](LICENSE)。
 示例字体使用 Unity 内置资源，uGUI 通过 Unity Package Manager 解析，各自遵循其原有许可。

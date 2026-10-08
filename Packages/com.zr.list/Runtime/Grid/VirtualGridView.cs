@@ -69,14 +69,23 @@ namespace ZRList
         {
             get
             {
+                if (!IsInitialized) {
+                    return 0;
+                }
+
+                // The root registry already tracks every bound cell. During a
+                // callback the row renderer can still be transferring old rows,
+                // so preserve the visible collection's in-progress count there.
+                if (m_callbackDepth == 0 && RowScrollView.CanQueryViewport) {
+                    return m_boundCellsByRoot.Count;
+                }
+
                 var count = 0;
-                if (IsInitialized) {
-                    IReadOnlyList<ScrollItemView> rows = RowScrollView.VisibleItems;
-                    for (int rowIndex = 0; rowIndex < rows.Count; ++rowIndex) {
-                        foreach (ScrollItemView cell in ((RowView)rows[rowIndex]).Cells) {
-                            if (cell != null && cell.IsBound) {
-                                ++count;
-                            }
+                IReadOnlyList<ScrollItemView> rows = RowScrollView.VisibleItems;
+                for (int rowIndex = 0; rowIndex < rows.Count; ++rowIndex) {
+                    foreach (ScrollItemView cell in ((RowView)rows[rowIndex]).Cells) {
+                        if (cell != null && cell.IsBound) {
+                            ++count;
                         }
                     }
                 }
@@ -536,16 +545,40 @@ namespace ZRList
                     cell.ItemSize = CellSize.y;
                     cell.IsBound = true;
                     m_boundCellsByRoot[cell.Root.gameObject] = cell;
-                    cell.Root.anchorMin = cell.Root.anchorMax = new Vector2(0f, 1f);
-                    cell.Root.pivot = new Vector2(0f, 1f);
-                    cell.Root.sizeDelta = CellSize;
-                    cell.Root.anchoredPosition = new Vector2(column * (CellSize.x + CellSpacing.x), 0f);
+                    ConfigureCellRoot(cell.Root, column);
                     m_adapter.Bind(cell, dataIndex, new ScrollItemLayoutContext(ScrollOrientation.Vertical, CellSize.x, CellSize.x, RowScrollView.LayoutRevision));
                     cell.Root.gameObject.SetActive(true);
                 }
             }
             finally {
                 --m_callbackDepth;
+            }
+        }
+
+        private void ConfigureCellRoot(RectTransform root, int column)
+        {
+            // Retained cells normally keep their geometry across row reuse.
+            // Read the real transform so business changes are still repaired.
+            var topLeft = new Vector2(0f, 1f);
+            if (!root.anchorMin.Equals(topLeft)) {
+                root.anchorMin = topLeft;
+            }
+
+            if (!root.anchorMax.Equals(topLeft)) {
+                root.anchorMax = topLeft;
+            }
+
+            if (!root.pivot.Equals(topLeft)) {
+                root.pivot = topLeft;
+            }
+
+            if (!root.sizeDelta.Equals(CellSize)) {
+                root.sizeDelta = CellSize;
+            }
+
+            var position = new Vector2(column * (CellSize.x + CellSpacing.x), 0f);
+            if (!root.anchoredPosition.Equals(position)) {
+                root.anchoredPosition = position;
             }
         }
 
