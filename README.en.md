@@ -11,6 +11,24 @@ Virtualized lists and grids for Unity uGUI. Create and reuse views for visible i
 
 ## Demos
 
+### Item dragging (ItemDrag)
+
+Drag the `MOVE` handle to swap items. Drag elsewhere on an item to scroll the list, or release outside a valid slot to cancel the swap.
+
+![Item dragging with dedicated handles, item swapping, and cancellation](Packages/com.zr.list/Documentation~/Images/ItemDrag.gif)
+
+### Callback-based tree (CallbackTree)
+
+Render a three-level chapter → section → lesson tree with `OnItemRender`. Click a heading to expand or collapse it, or a lesson to toggle its read state and notification dot. Controls expand or collapse all nodes, prioritize unread lessons, and reveal a hidden lesson by expanding its ancestors. The sample's application code owns read state and comparison rules.
+
+![Callback tree with three-level folding, read state, unread ordering, and hidden-lesson navigation](Packages/com.zr.list/Documentation~/Images/CallbackTree.gif)
+
+### Horizontal list of vertical lists (HorizontalNestedVertical)
+
+Drag horizontally between outer groups and vertically within each group's inner list. Both levels virtualize and recycle views independently, with controls to navigate to the first or last group and the ends of inner lists.
+
+![Horizontal outer list with independent vertical inner lists and virtualization at both levels](Packages/com.zr.list/Documentation~/Images/HorizontalNestedVertical.gif)
+
 ### Curved scrolling
 
 Explore 1,000 recycled cards along a circular arc or a custom curve, with optional tangent rotation.

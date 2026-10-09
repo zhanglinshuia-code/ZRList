@@ -122,6 +122,24 @@ void OnItemRender(ScrollItemView item, int dataIndex)
 
 `VirtualGridView` 按行虚拟化；示例中的 `DirectGridView` 按格子直接复用。两者的布局和接入方式见[网格说明](Packages/com.zr.list/Documentation~/Usage.md#背包网格)。
 
+### 物品拖拽（ItemDrag）
+
+拖动 `MOVE` 手柄可交换物品位置；拖动物品的其他区域仍用于滚动列表，拖到有效格子之外松开则取消交换。
+
+![物品拖拽：独立手柄、交换物品与取消拖拽](Packages/com.zr.list/Documentation~/Images/ItemDrag.gif)
+
+### 回调折叠树（CallbackTree）
+
+通过 `OnItemRender` 渲染“章节 → 小节 → 课程”三层树。点击标题展开或折叠，点击课程切换已读状态与红点；支持全部展开／折叠、未读优先排序，以及自动展开祖先并定位隐藏课程。阅读状态和比较规则由示例业务代码维护。
+
+![回调折叠树：三层折叠、已读状态、未读排序与隐藏课程定位](Packages/com.zr.list/Documentation~/Images/CallbackTree.gif)
+
+### 横向嵌套纵向列表（HorizontalNestedVertical）
+
+左右拖动切换外层分组，上下拖动滚动当前分组的内层列表。两层列表均独立虚拟化复用，并支持首组、末组和内层列表末尾定位。
+
+![横向嵌套纵向列表：外层横向滚动、内层纵向滚动与两层虚拟化](Packages/com.zr.list/Documentation~/Images/HorizontalNestedVertical.gif)
+
 ### 聊天列表（Chat）
 
 多种消息模板、动态气泡高度，以及消息发送和回复。
