@@ -20,7 +20,7 @@ namespace ZRList.Samples.Editor
             RectTransform leaf = SavePrefab(CreateExpandablePrefab(false), "TreeLeaf");
             RectTransform canvas = CreateShell("12", "Every task has a place",
                 "Campaign > chapter > section > task / fold any branch / activity reorders siblings at every level");
-            VirtualScrollView list = CreateList(canvas, branch, false, 430f);
+            VirtualScrollView list = CreateList(canvas, branch, false, 430f, showScrollbar: true);
             list.ItemPrefabs = new[] { branch, leaf };
             list.ContentSpacing = 6f;
             TreeListDemo demo = canvas.gameObject.AddComponent<TreeListDemo>();

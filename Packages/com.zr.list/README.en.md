@@ -99,6 +99,10 @@ void OnItemRender(ScrollItemView item, int dataIndex)
 
 `data` and `ItemView` belong to your application. `ItemView` is a plain C# class: cache component references in its constructor and update the displayed content in `SetData`. Subscribing to the render callback fills the initial viewport. Views are recycled when they leave the viewport, and `CachedComponent` stays with the view instance. Unsubscribe your event handlers when your controller is destroyed.
 
+### Optional scrollbars
+
+Scrollbars are optional UI. The catalog, inventory, item-drag, chat and expandable/tree demos, plus the outer lists in both nested demos, include native uGUI scrollbars. They appear on the right or bottom and hide when the content fits the viewport. Bind a `Scrollbar` to the corresponding field on `VirtualScrollRect` when your application needs one, or leave both fields empty. To remove one from a sample, clear its reference before deleting or disabling the scrollbar object. Dragging, wheel input and virtualization continue to work without scrollbars. See [configuration and removal](Documentation~/Usage.md#滚动条业务可选).
+
 ### Updating content and sizes
 
 ```csharp

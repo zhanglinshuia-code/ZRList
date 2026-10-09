@@ -22,7 +22,7 @@ namespace ZRList.Samples.Editor
             RectTransform item = SavePrefab(CreateExpandablePrefab(false), "ExpandableItem");
             RectTransform canvas = CreateShell("11", "Your progress, one chapter at a time",
                 "Click chapter headers to fold / click objectives to change state / groups reorder while keeping your place");
-            VirtualScrollView list = CreateList(canvas, header, false, 430f);
+            VirtualScrollView list = CreateList(canvas, header, false, 430f, showScrollbar: true);
             list.ItemPrefabs = new[] { header, item };
             list.ContentSpacing = 8f;
             ExpandableListDemo demo = canvas.gameObject.AddComponent<ExpandableListDemo>();

@@ -88,6 +88,8 @@ void OnItemRender(ScrollItemView item, int dataIndex)
 
 常用操作：`RefreshItem(index)` 更新内容，`SetItemSize(index, size)` 更新主轴尺寸，`AppendItems(count)` 尾部追加，`TryGetVisibleItem` 查询可见项。详细参数、动态尺寸和资源生命周期见[使用说明](Documentation~/Usage.md)。
 
+**滚动条按业务需要选配。** 普通横竖列表、背包、物品拖拽、聊天、折叠列表和嵌套列表外层示例已配置原生滚动条，内容不足一屏时自动隐藏。不需要时保留 `Horizontal Scrollbar / Vertical Scrollbar` 为空；从示例移除时先清空引用，再删除或禁用滚动条对象，原有滚动和虚拟化照常工作。详见[滚动条配置](Documentation~/Usage.md#滚动条业务可选)。
+
 ## 折叠列表接入
 
 | 场景 | 控制器 | 接入示例 |

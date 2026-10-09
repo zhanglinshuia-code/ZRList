@@ -21,7 +21,7 @@ namespace ZRList.Samples.Editor
             RectTransform task = SavePrefab(CreateBusinessSortPrefab(false), "BusinessSortTask");
             RectTransform canvas = CreateShell("13", "Watch priorities change the order",
                 "Four-level task tree / compare independent business flags / click a task to select it");
-            VirtualScrollView list = CreateList(canvas, branch, false, 430f);
+            VirtualScrollView list = CreateList(canvas, branch, false, 430f, showScrollbar: true);
             ((RectTransform)list.transform).sizeDelta = new Vector2(760f, 430f);
             list.ItemPrefabs = new[] { branch, task };
             list.ContentSpacing = 8f;

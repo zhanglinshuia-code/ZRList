@@ -489,7 +489,7 @@ namespace ZRList.Samples.Editor
         {
             RectTransform canvas = CreateShell(horizontal ? "06" : "05", horizontal ? "Columns with their own stories" : "Shelves you can explore", horizontal ? "Drag sideways between groups / drag up and down within each column" : "Drag up and down between groups / drag sideways within each shelf");
             NestedScrollDemo demo = canvas.gameObject.AddComponent<NestedScrollDemo>();
-            demo.ScrollView = CreateList(canvas, group, horizontal);
+            demo.ScrollView = CreateList(canvas, group, horizontal, showScrollbar: true);
             demo.Status = DrawText("Status", canvas, new Vector2(56f, -614f), new Vector2(1150f, 22f), "", 14, s_muted);
             DrawButton(canvas, new Vector2(56f, -656f), "First group", demo.JumpToFirst);
             DrawButton(canvas, new Vector2(214f, -656f), "Last group", demo.JumpToLast);
@@ -497,7 +497,7 @@ namespace ZRList.Samples.Editor
             EditorSceneManager.SaveScene(SceneManager.GetActiveScene(), ScenePath(horizontal ? "HorizontalNestedVertical" : "VerticalNestedHorizontal"));
         }
 
-        private static VirtualScrollView CreateList(RectTransform canvas, RectTransform prefab, bool horizontal, float height = 450f)
+        private static VirtualScrollView CreateList(RectTransform canvas, RectTransform prefab, bool horizontal, float height = 450f, bool showScrollbar = false)
         {
             RectTransform host = CreateRect("ScrollView", canvas, new Vector2(56f, -150f), new Vector2(1168f, height));
             AddImage(host, ColorOf("#101c2b")).raycastTarget = true;
@@ -521,14 +521,56 @@ namespace ZRList.Samples.Editor
             list.ContentSpacing = 12f;
             list.Orientation = horizontal ? ScrollOrientation.Horizontal : ScrollOrientation.Vertical;
             list.StretchItems = true;
+            if (showScrollbar) {
+                CreateScrollbar(scrollRect, horizontal);
+            }
             return list;
+        }
+
+        // 滚动条只是可选的示例 UI。业务可使用原生 Scrollbar，也可保留空引用。
+        private static void CreateScrollbar(ScrollRect scrollRect, bool horizontal)
+        {
+            RectTransform track = CreateRect(horizontal ? "HorizontalScrollbar" : "VerticalScrollbar", scrollRect.transform, Vector2.zero, Vector2.zero);
+            track.anchorMin = horizontal ? Vector2.zero : new Vector2(1f, 0f);
+            track.anchorMax = horizontal ? new Vector2(1f, 0f) : Vector2.one;
+            track.offsetMin = horizontal ? new Vector2(20f, 4f) : new Vector2(-16f, 20f);
+            track.offsetMax = horizontal ? new Vector2(-20f, 16f) : new Vector2(-4f, -20f);
+            AddImage(track, ColorOf("#23364b")).raycastTarget = true;
+
+            RectTransform slidingArea = CreateRect("Sliding Area", track, Vector2.zero, Vector2.zero);
+            Stretch(slidingArea);
+            // 与原生 UI 的布局方式相同：内缩滑动区域并扩展 Handle，确保长列表也能抓住滑块。
+            slidingArea.offsetMin = horizontal ? new Vector2(12f, 2f) : new Vector2(2f, 12f);
+            slidingArea.offsetMax = -slidingArea.offsetMin;
+            RectTransform handle = CreateRect("Handle", slidingArea, Vector2.zero, Vector2.zero);
+            handle.pivot = new Vector2(0.5f, 0.5f);
+            handle.sizeDelta = horizontal ? new Vector2(24f, 0f) : new Vector2(0f, 24f);
+            Image handleImage = AddImage(handle, s_accent);
+            handleImage.raycastTarget = true;
+
+            Scrollbar scrollbar = track.gameObject.AddComponent<Scrollbar>();
+            scrollbar.direction = horizontal ? Scrollbar.Direction.LeftToRight : Scrollbar.Direction.BottomToTop;
+            scrollbar.handleRect = handle;
+            scrollbar.targetGraphic = handleImage;
+            scrollbar.numberOfSteps = 0;
+            scrollbar.value = horizontal ? 0f : 1f;
+            // Overlay the existing padding. AutoHide keeps the viewport size stable
+            // when content grows/shrinks, including chat measurement and tree folding.
+            if (horizontal) {
+                scrollRect.horizontalScrollbar = scrollbar;
+                scrollRect.horizontalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
+            }
+            else {
+                scrollRect.verticalScrollbar = scrollbar;
+                scrollRect.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
+            }
         }
 
         private static void CreateCatalogScene(bool horizontal, RectTransform prefab)
         {
             RectTransform canvas = CreateShell(horizontal ? "02" : "01", horizontal ? "A collection in motion" : "Room for every adventure", horizontal ? "Horizontal list / variable card widths / drag or use the mouse wheel" : "Vertical list / variable row heights / 1,000 items with recycled views");
             CatalogScrollDemo demo = canvas.gameObject.AddComponent<CatalogScrollDemo>();
-            demo.ScrollView = CreateList(canvas, prefab, horizontal);
+            demo.ScrollView = CreateList(canvas, prefab, horizontal, showScrollbar: true);
             demo.Icons = LoadIcons();
             demo.Status = DrawText("Status", canvas, new Vector2(56f, -614f), new Vector2(1150f, 22f), "", 14, s_muted);
             DrawButton(canvas, new Vector2(56f, -656f), "First item", demo.JumpToFirst);
@@ -541,6 +583,7 @@ namespace ZRList.Samples.Editor
         {
             RectTransform canvas = CreateShell("03", "Pack for the next chapter", "Inventory grid / click a slot to select / automatic columns / 503 items");
             DirectGridView grid = CreateDirectGrid(canvas, slot);
+            CreateScrollbar(grid.ScrollRect, false);
             grid.CellSize = new Vector2(144f, 144f);
             grid.CellSpacing = new Vector2(12f, 12f);
             grid.ColumnCount = 0;
@@ -557,7 +600,7 @@ namespace ZRList.Samples.Editor
         private static void CreateItemDragScene(RectTransform row, RectTransform slot)
         {
             RectTransform canvas = CreateShell("07", "Move items, make room", "Drag the MOVE handle to swap items / drag the rest of a slot to scroll the list");
-            VirtualScrollView list = CreateList(canvas, row, false);
+            VirtualScrollView list = CreateList(canvas, row, false, showScrollbar: true);
             VirtualGridView grid = list.gameObject.AddComponent<VirtualGridView>();
             grid.RowScrollView = list;
             grid.CellPrefab = slot;
@@ -594,7 +637,7 @@ namespace ZRList.Samples.Editor
         {
             RectTransform canvas = CreateShell("04", "Keep the conversation flowing", "Configurable message styles / incoming on the left, your messages on the right / dynamic bubble heights");
             ChatScrollDemo demo = canvas.gameObject.AddComponent<ChatScrollDemo>();
-            demo.ScrollView = CreateList(canvas, itemPrefabs[0], false, 410f);
+            demo.ScrollView = CreateList(canvas, itemPrefabs[0], false, 410f, showScrollbar: true);
             demo.ScrollView.ItemPrefabs = itemPrefabs;
             demo.Status = DrawText("Status", canvas, new Vector2(56f, -574f), new Vector2(1100f, 20f), "", 14, s_muted);
             demo.MessageInput = DrawInput(canvas, new Vector2(56f, -610f), new Vector2(810f, 44f));

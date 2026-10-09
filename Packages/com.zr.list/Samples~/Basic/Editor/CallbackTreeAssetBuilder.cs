@@ -30,7 +30,7 @@ namespace ZRList.Samples.Editor
 
             RectTransform canvas = CreateShell("14", "One tree, simple callbacks",
                 "Chapters > sections > lessons / click to fold or mark read / rendered with OnItemRender");
-            VirtualScrollView list = CreateList(canvas, branch, false, 430f);
+            VirtualScrollView list = CreateList(canvas, branch, false, 430f, showScrollbar: true);
             list.ItemPrefabs = new[] { branch, lesson };
             list.ContentSpacing = 6f;
             var demo = canvas.gameObject.AddComponent<CallbackTreeDemo>();

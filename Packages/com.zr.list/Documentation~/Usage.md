@@ -106,6 +106,28 @@ void OnItemRender(ScrollItemView item, int dataIndex)
 
 切换 tab 时先替换业务数据，再调用 `scrollView.ReloadData(data.Count)`，即使数量相同也要刷新。空数据同样调用 `ReloadData(0)`：回收全部可见 item，保留对象池和视图缓存，不触发 `OnItemRender`。再次传入正数即可复用这些实例显示新数据。业务在切换方法中根据数量控制位于 Content 外的“暂无数据”提示。
 
+## 滚动条（业务可选）
+
+**滚动条是可选 UI，不是使用列表的必需组件。** 需要展示当前位置或让用户拖动滑块快速浏览时，可以添加；触屏页面、短列表或强调展示效果的页面，也可以不添加。未配置滚动条时，列表的拖拽、滚轮、惯性、虚拟化和代码定位照常工作，业务的数据与渲染代码无需调整。
+
+示例中的 `VerticalList`、`HorizontalList`、`InventoryGrid`、`ItemDrag`、`Chat`、四个折叠列表，以及两个嵌套列表的外层已配置原生 uGUI `Scrollbar`。竖向位于右侧，横向位于底部；嵌套内层、`CurvedScroll` 和两个奖励展示场景默认不配置，业务可自行选择。
+
+### 添加与配置
+
+1. 在滚动对象下创建 UI `Scrollbar`，与 `Viewport` 同级，放在裁剪区域及 `Content` 外，避免随内容移动或被虚拟化回收。
+2. 竖向设为 **Bottom To Top**，绑定 `VirtualScrollRect` 的 **Vertical Scrollbar**；横向设为 **Left To Right**，绑定 **Horizontal Scrollbar**。`Number Of Steps` 保持 `0`，连续滚动。
+3. 配置显示方式：`Permanent` 常驻；`AutoHide` 在内容未超出视口时隐藏，超出时显示。`AutoHide` 不表示停手后淡出。
+
+`VirtualScrollRect` 继承原生 `ScrollRect`，会同步滑块位置、大小及拖动结果，不需要业务额外订阅 `Scrollbar.onValueChanged` 或逐帧同步。`InventoryGrid` 示例的 `DirectGridView.ScrollRect` 同样可以直接绑定。
+
+示例使用 `AutoHide`，把滚动条叠放在列表边缘现有的留白中，不改变 Viewport 尺寸。业务可调整轨道、滑块和颜色，但应留出交互空间，避免遮挡 item。`AutoHideAndExpandViewport` 会在显隐时改变视口尺寸；动态高度文字和自动列数网格会因此重新布局，若不需要这种效果，使用 `AutoHide` 即可。
+
+### 不需要时移除
+
+新建业务列表时，让 **Horizontal Scrollbar / Vertical Scrollbar** 保持 `None`，不创建滚动条对象即可。基于示例修改时，先清空对应字段，再删除或禁用同级的 `HorizontalScrollbar` / `VerticalScrollbar` 对象。仅禁用仍被绑定的对象可能被 `ScrollRect` 的自动显隐重新启用。运行库不会自动创建滚动条。
+
+动态尺寸列表的总长度包含屏外项估算值，滑块大小和位置会随实际测量调整；需要精确定位某条数据时，使用列表的 `JumpToDataItem` 等定位接口。
+
 ## 自定义适配器（可选）
 
 需要自定义尺寸计算、强类型视图工厂和资源销毁管理时，可使用保留的 `Initialize(adapter, count)` 接口。适配器实现：
