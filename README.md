@@ -5,7 +5,7 @@
 Unity uGUI 虚拟列表与网格。只创建和复用可见项，支持横向、竖向、动态尺寸、多种预制体、分组与多层折叠、嵌套滚动和动画定位。
 
 - Unity **2021.3 LTS 及以上**，支持 Unity 6。
-- UPM 包：`com.zr.list`，版本 **1.0.2**。
+- UPM 包：`com.zr.list`，版本 **1.0.3**。
 - 运行库仅依赖 `com.unity.ugui`。
 - 许可证：[Apache-2.0](LICENSE)。
 
@@ -24,12 +24,12 @@ https://github.com/zhanglinshuia-code/ZRList.git?path=/Packages/com.zr.list#main
 需要固定到某个发布版本时，可以使用标签地址，例如：
 
 ```text
-https://github.com/zhanglinshuia-code/ZRList.git?path=/Packages/com.zr.list#v1.0.2
+https://github.com/zhanglinshuia-code/ZRList.git?path=/Packages/com.zr.list#v1.0.3
 ```
 
 ## 升级
 
-本次版本为 **1.0.2**。完整步骤、安装来源差异与迁移事项见[升级指南](Packages/com.zr.list/Documentation~/Upgrading.md)。若业务直接引用过公开工具类 `ZRList.GameObjectPool`，请按指南迁移；列表内部视图池不受影响。
+本次版本为 **1.0.3**。完整步骤、安装来源差异与迁移事项见[升级指南](Packages/com.zr.list/Documentation~/Upgrading.md)。若业务直接引用过公开工具类 `ZRList.GameObjectPool`，请按指南迁移；列表内部视图池不受影响。
 
 - **通过 `#main` 安装**：在 Package Manager 中选中 **ZRList**，点击 **Update** 获取主分支最新提交。若当前 Unity 版本没有该按钮，再通过 **Add package from git URL** 输入同一个 `#main` 地址即可刷新。远端发布新提交后，需要主动更新，包不会自动变化。
 - **通过 `#v1.0.0` 等标签安装**：版本已固定，**Update 不会自动切换到新标签**。通过 **Add package from git URL** 输入新的标签地址即可升级；也可以改用上面的 `#main` 地址，之后跟随主分支更新。重新添加 URL 会更新已有的同名包，无需先卸载。

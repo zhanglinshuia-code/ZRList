@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.3 — 2026-10-09
+
+通过 Git `#main` 安装的项目可在 Package Manager 中点击 Update；固定本次版本使用 `#v1.0.3`。已导入的示例需要重新导入，详见[安装与迁移指南](Documentation~/Upgrading.md)。
+
+- 修复示例场景生成器、截图工具和场景回归中的 `FindObjectOfType` 弃用警告：Unity 2022.2 及以上使用 `FindFirstObjectByType`，旧版 Unity 保留原 API。
+- 场景查找保持原有的首个活动对象语义，通过编译条件选择 API，不增加运行时版本判断或额外分配；运行库 API 保持不变。
+
 ## 1.0.2 — 2026-10-09
 
 通过 Git `#main` 安装的项目可在 Package Manager 中点击 Update；固定本次版本使用 `#v1.0.2`。升级前请查看[安装与迁移指南](Documentation~/Upgrading.md)，新版示例需重新导入。

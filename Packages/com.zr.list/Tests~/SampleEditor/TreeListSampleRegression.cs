@@ -42,7 +42,11 @@ namespace ZRList.Tests
             try {
                 if (EditorApplication.timeSinceStartup > s_deadline) throw new Exception("Tree sample timed out.");
                 if (!Application.isPlaying || Time.frameCount < 5) return;
+#if UNITY_2022_2_OR_NEWER
+                TreeListDemo demo = UnityEngine.Object.FindFirstObjectByType<TreeListDemo>();
+#else
                 TreeListDemo demo = UnityEngine.Object.FindObjectOfType<TreeListDemo>();
+#endif
                 if (!s_started) {
                     CheckButtons(demo);
                     s_started = true;

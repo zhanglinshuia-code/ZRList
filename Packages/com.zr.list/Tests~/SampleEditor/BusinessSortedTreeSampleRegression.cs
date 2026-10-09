@@ -42,7 +42,11 @@ namespace ZRList.Tests
             try {
                 if (EditorApplication.timeSinceStartup > s_deadline) throw new Exception("Business sorting sample timed out.");
                 if (!Application.isPlaying || Time.frameCount < 5) return;
+#if UNITY_2022_2_OR_NEWER
+                var demo = UnityEngine.Object.FindFirstObjectByType<BusinessSortedTreeDemo>();
+#else
                 var demo = UnityEngine.Object.FindObjectOfType<BusinessSortedTreeDemo>();
+#endif
                 if (!s_started) {
                     CheckPriorities(demo);
                     s_started = true;

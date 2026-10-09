@@ -42,7 +42,11 @@ namespace ZRList.Tests
             try {
                 if (EditorApplication.timeSinceStartup > s_deadline) throw new Exception("Expandable sample timed out.");
                 if (!Application.isPlaying || Time.frameCount < 5) return;
+#if UNITY_2022_2_OR_NEWER
+                ExpandableListDemo demo = UnityEngine.Object.FindFirstObjectByType<ExpandableListDemo>();
+#else
                 ExpandableListDemo demo = UnityEngine.Object.FindObjectOfType<ExpandableListDemo>();
+#endif
                 if (!s_started) {
                     CheckButtons(demo);
                     s_started = true;

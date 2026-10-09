@@ -45,10 +45,10 @@ namespace ZRList.Samples.Editor
             InitializePaths();
             EditorSceneManager.OpenScene(ScenePath("CurvedScroll"));
             Canvas.ForceUpdateCanvases();
-            CurvedScrollDemo demo = UnityEngine.Object.FindObjectOfType<CurvedScrollDemo>();
+            CurvedScrollDemo demo = FindFirstSceneObject<CurvedScrollDemo>();
             demo.InitializeDemo();
             demo.ScrollView.JumpToDataItem(12);
-            Camera camera = UnityEngine.Object.FindObjectOfType<Camera>();
+            Camera camera = FindFirstSceneObject<Camera>();
             string output = Path.Combine(Directory.GetParent(Application.dataPath).FullName, "Previews");
             Directory.CreateDirectory(output);
             var target = new RenderTexture(1280, 720, 24, RenderTextureFormat.ARGB32);

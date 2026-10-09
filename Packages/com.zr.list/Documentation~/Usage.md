@@ -1,6 +1,6 @@
 # ZRList 使用说明
 
-安装方式见[包说明](../README.md)，更新方式见[1.0.2 升级说明](Upgrading.md)。默认安装地址跟踪 `main` 分支，需要固定版本时使用发布标签。以下示例路径均相对于 Package Manager 导入的 **ZRList Demos** 目录。
+安装方式见[包说明](../README.md)，更新方式见[1.0.3 升级说明](Upgrading.md)。默认安装地址跟踪 `main` 分支，需要固定版本时使用发布标签。以下示例路径均相对于 Package Manager 导入的 **ZRList Demos** 目录。
 
 ## Unity 与输入兼容性
 

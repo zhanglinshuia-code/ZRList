@@ -209,7 +209,7 @@ namespace ZRList.Samples.Editor
             }
             ) {
                 EditorSceneManager.OpenScene(ScenePath(name));
-                Camera camera = UnityEngine.Object.FindObjectOfType<Camera>();
+                Camera camera = FindFirstSceneObject<Camera>();
                 var target = new RenderTexture(1280, 720, 24, RenderTextureFormat.ARGB32);
                 camera.targetTexture = target;
                 Canvas.ForceUpdateCanvases();
@@ -231,16 +231,26 @@ namespace ZRList.Samples.Editor
             Debug.Log("SHOWCASE_PREVIEWS_CAPTURED " + output);
         }
 
+        // 保留旧 API 查找首个活动对象的语义；版本分支在编译时选择，不增加运行时分配。
+        private static T FindFirstSceneObject<T>() where T: UnityEngine.Object
+        {
+#if UNITY_2022_2_OR_NEWER
+            return UnityEngine.Object.FindFirstObjectByType<T>();
+#else
+            return UnityEngine.Object.FindObjectOfType<T>();
+#endif
+        }
+
         private static void InitializeActiveDemo()
         {
-            CatalogScrollDemo catalog = UnityEngine.Object.FindObjectOfType<CatalogScrollDemo>();
-            InventoryGridDemo inventory = UnityEngine.Object.FindObjectOfType<InventoryGridDemo>();
-            ChatScrollDemo chat = UnityEngine.Object.FindObjectOfType<ChatScrollDemo>();
-            NestedScrollDemo nested = UnityEngine.Object.FindObjectOfType<NestedScrollDemo>();
-            ItemDragDemo drag = UnityEngine.Object.FindObjectOfType<ItemDragDemo>();
-            RewardRevealDemo rewards = UnityEngine.Object.FindObjectOfType<RewardRevealDemo>();
-            DirectRewardRevealDemo directRewards = UnityEngine.Object.FindObjectOfType<DirectRewardRevealDemo>();
-            CurvedScrollDemo curved = UnityEngine.Object.FindObjectOfType<CurvedScrollDemo>();
+            CatalogScrollDemo catalog = FindFirstSceneObject<CatalogScrollDemo>();
+            InventoryGridDemo inventory = FindFirstSceneObject<InventoryGridDemo>();
+            ChatScrollDemo chat = FindFirstSceneObject<ChatScrollDemo>();
+            NestedScrollDemo nested = FindFirstSceneObject<NestedScrollDemo>();
+            ItemDragDemo drag = FindFirstSceneObject<ItemDragDemo>();
+            RewardRevealDemo rewards = FindFirstSceneObject<RewardRevealDemo>();
+            DirectRewardRevealDemo directRewards = FindFirstSceneObject<DirectRewardRevealDemo>();
+            CurvedScrollDemo curved = FindFirstSceneObject<CurvedScrollDemo>();
             if (curved != null) {
                 curved.InitializeDemo();
                 curved.ApplyCurve();

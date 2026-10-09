@@ -55,7 +55,11 @@ namespace ZRList.Tests
                 if (!Application.isPlaying || Time.frameCount < 5) {
                     return;
                 }
+#if UNITY_2022_2_OR_NEWER
+                CallbackTreeDemo demo = UnityEngine.Object.FindFirstObjectByType<CallbackTreeDemo>();
+#else
                 CallbackTreeDemo demo = UnityEngine.Object.FindObjectOfType<CallbackTreeDemo>();
+#endif
                 if (!s_started) {
                     CheckInteraction(demo);
                     s_started = true;

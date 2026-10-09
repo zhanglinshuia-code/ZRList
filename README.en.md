@@ -5,7 +5,7 @@ English | [简体中文](README.md)
 Virtualized lists and grids for Unity uGUI. Create and reuse views for visible items, with horizontal and vertical scrolling, dynamic item sizes, multiple prefabs, expandable groups and trees, nested scrolling, and animated navigation.
 
 - Unity **2021.3 LTS or later**, including Unity 6.
-- UPM package: `com.zr.list`, version **1.0.2**.
+- UPM package: `com.zr.list`, version **1.0.3**.
 - The runtime depends only on `com.unity.ugui`.
 - License: [Apache-2.0](LICENSE).
 
@@ -40,7 +40,7 @@ https://github.com/zhanglinshuia-code/ZRList.git?path=/Packages/com.zr.list#main
 This tracks the `main` branch. To pin a release instead, use a version tag:
 
 ```text
-https://github.com/zhanglinshuia-code/ZRList.git?path=/Packages/com.zr.list#v1.0.2
+https://github.com/zhanglinshuia-code/ZRList.git?path=/Packages/com.zr.list#v1.0.3
 ```
 
 You can also download the repository and use **Add package from disk** to select `Packages/com.zr.list/package.json`.
@@ -49,12 +49,12 @@ After installation, expand the package's **Samples**, import **ZRList Demos**, a
 
 ## Updating
 
-The current release is **1.0.2**. See the [upgrade guide (Chinese)](Packages/com.zr.list/Documentation~/Upgrading.md) for source-specific steps and troubleshooting. The public `ZRList.GameObjectPool` utility was removed; applications that used it directly must migrate to their own pool. The list's internal view pool is unchanged.
+The current release is **1.0.3**. See the [upgrade guide (Chinese)](Packages/com.zr.list/Documentation~/Upgrading.md) for source-specific steps and troubleshooting. The public `ZRList.GameObjectPool` utility was removed; applications that used it directly must migrate to their own pool. The list's internal view pool is unchanged.
 
 - **Installed from `#main`:** select **ZRList** in Package Manager and use **Update** when available. Otherwise, add the same Git URL again to resolve the branch's current commit. New commits are not installed automatically.
 - **Installed from a version tag:** add the Git URL with the new tag to upgrade, or switch to `#main`. Updating a pinned tag does not select a newer release tag automatically.
 - **Local or embedded copies:** update those files yourself or switch to the Git URL. An embedded `Packages/com.zr.list` folder takes precedence over a Git dependency.
-- **Demo scenes:** reimport **ZRList Demos** after upgrading, then open `Assets/Samples/ZRList/1.0.2/ZRList Demos/Scenes`. Previously imported copies do not update with the package. Back up customized demos outside `Assets` before replacing them; keep only one source copy to avoid duplicate assemblies/types.
+- **Demo scenes:** reimport **ZRList Demos** after upgrading, then open `Assets/Samples/ZRList/1.0.3/ZRList Demos/Scenes`. Previously imported copies do not update with the package. Back up customized demos outside `Assets` before replacing them; keep only one source copy to avoid duplicate assemblies/types.
 
 Git dependencies record their resolved commit in the project lock file. See [Unity's Git dependency documentation](https://docs.unity3d.com/6000.0/Documentation/Manual/upm-git.html#git-locks) for resolution and update behavior.
 

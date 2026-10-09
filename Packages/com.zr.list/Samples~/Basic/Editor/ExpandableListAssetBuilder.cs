@@ -64,12 +64,12 @@ namespace ZRList.Samples.Editor
         public static void GenerateExpandableAndCapture()
         {
             GenerateExpandable();
-            ExpandableListDemo demo = Object.FindObjectOfType<ExpandableListDemo>();
+            ExpandableListDemo demo = FindFirstSceneObject<ExpandableListDemo>();
             Canvas.ForceUpdateCanvases();
             demo.InitializeDemo();
             demo.CollapseAll();
             Canvas.ForceUpdateCanvases();
-            Camera camera = Object.FindObjectOfType<Camera>();
+            Camera camera = FindFirstSceneObject<Camera>();
             var target = new RenderTexture(1280, 720, 24, RenderTextureFormat.ARGB32);
             camera.targetTexture = target;
             camera.Render();
