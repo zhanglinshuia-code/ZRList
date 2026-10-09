@@ -877,6 +877,7 @@ namespace ZRList
                 m_committingSizes.Clear();
                 m_dirtyItems.Clear();
                 m_sizeIndex.Clear();
+                m_dataOldToNew = Array.Empty<int>();
                 if (ReferenceEquals(m_adapter, m_callbackAdapter)) {
                     m_callbackAdapter?.ClearPrefabSelection();
                     m_usesConfiguredPrefabs = false;

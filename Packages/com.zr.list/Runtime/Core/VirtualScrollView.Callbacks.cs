@@ -42,7 +42,7 @@ namespace ZRList
         {
             get
             {
-                return m_adapter is not CallbackScrollItemAdapter callbackAdapter || callbackAdapter.Render != null;
+                return m_adapter is not IScrollItemRenderState state || state.IsRendererReady;
             }
         }
 

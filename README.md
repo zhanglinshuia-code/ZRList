@@ -2,10 +2,10 @@
 
 [English](README.en.md) | 简体中文
 
-Unity uGUI 虚拟列表与网格。只创建和复用可见项，支持横向、竖向、动态尺寸、多种预制体、嵌套滚动和动画定位。
+Unity uGUI 虚拟列表与网格。只创建和复用可见项，支持横向、竖向、动态尺寸、多种预制体、分组与多层折叠、嵌套滚动和动画定位。
 
 - Unity **2021.3 LTS 及以上**，支持 Unity 6。
-- UPM 包：`com.zr.list`，版本 **1.0.1**。
+- UPM 包：`com.zr.list`，版本 **1.0.2**。
 - 运行库仅依赖 `com.unity.ugui`。
 - 许可证：[Apache-2.0](LICENSE)。
 
@@ -24,10 +24,12 @@ https://github.com/zhanglinshuia-code/ZRList.git?path=/Packages/com.zr.list#main
 需要固定到某个发布版本时，可以使用标签地址，例如：
 
 ```text
-https://github.com/zhanglinshuia-code/ZRList.git?path=/Packages/com.zr.list#v1.0.1
+https://github.com/zhanglinshuia-code/ZRList.git?path=/Packages/com.zr.list#v1.0.2
 ```
 
 ## 升级
+
+本次版本为 **1.0.2**。完整步骤、安装来源差异与迁移事项见[升级指南](Packages/com.zr.list/Documentation~/Upgrading.md)。若业务直接引用过公开工具类 `ZRList.GameObjectPool`，请按指南迁移；列表内部视图池不受影响。
 
 - **通过 `#main` 安装**：在 Package Manager 中选中 **ZRList**，点击 **Update** 获取主分支最新提交。若当前 Unity 版本没有该按钮，再通过 **Add package from git URL** 输入同一个 `#main` 地址即可刷新。远端发布新提交后，需要主动更新，包不会自动变化。
 - **通过 `#v1.0.0` 等标签安装**：版本已固定，**Update 不会自动切换到新标签**。通过 **Add package from git URL** 输入新的标签地址即可升级；也可以改用上面的 `#main` 地址，之后跟随主分支更新。重新添加 URL 会更新已有的同名包，无需先卸载。
@@ -45,9 +47,9 @@ Git 包按 URL 指定的分支或标签解析，并通过锁文件记录提交�
 | Input System Package (New) | `InputSystemUIInputModule` |
 | Both，已启用 Input System | `InputSystemUIInputModule` |
 
-无需切换工程输入设置。Input System 是可选依赖，运行库仍仅依赖 uGUI。十个场景的 EventSystem 都由 `DemoInputModule` 在首次更新前配置，场景生成器也采用相同方式。
+无需切换工程输入设置。Input System 是可选依赖，运行库仍仅依赖 uGUI。所有示例的 EventSystem 都由 `DemoInputModule` 在首次更新前配置，场景生成器也采用相同方式。
 
-已实际验证以下组合，均运行十个示例并检查 EventSystem 的点击、拖拽、滚轮和聊天输入框聚焦：
+原有十个示例已实际验证以下组合，均运行场景并检查 EventSystem 的点击、拖拽、滚轮和聊天输入框聚焦：
 
 | Unity 版本 | 已验证的输入模式 |
 | --- | --- |
@@ -56,6 +58,8 @@ Git 包按 URL 指定的分支或标签解析，并通过锁文件记录提交�
 | 6000.3.11f1 | Input Manager、Input System 1.19.0、Both |
 
 另外通过 Unity 6 的 Windows IL2CPP 播放器验证（High 级别代码裁剪、Input System），以及 Unity 2021.3 的场景重新生成验证。
+
+新增四个折叠场景已通过 Unity 2022.3.5f1 Play Mode 交互验证；分组和树运行库的回调／Adapter 双入口还通过 Unity 2021.3.45f1 功能及预热分配回归。新增场景的记录与上述原有输入模式矩阵分别列示。
 
 从 **1.0.0 升级**：按上面的升级步骤安装 `main` 或 `v1.0.1` 及以上版本，并重新导入 **ZRList Demos** 以取得输入兼容修复。自定义过的旧场景，可将 EventSystem 上的 `StandaloneInputModule` 替换为 `DemoInputModule`。
 
@@ -84,6 +88,17 @@ void OnItemRender(ScrollItemView item, int dataIndex)
 
 常用操作：`RefreshItem(index)` 更新内容，`SetItemSize(index, size)` 更新主轴尺寸，`AppendItems(count)` 尾部追加，`TryGetVisibleItem` 查询可见项。详细参数、动态尺寸和资源生命周期见[使用说明](Packages/com.zr.list/Documentation~/Usage.md)。
 
+## 折叠列表接入
+
+| 场景 | 控制器 | 接入示例 |
+| --- | --- | --- |
+| 一级分组，标题与子项类型不同 | `ExpandableListController<TGroup, TItem, TKey>` | `ExpandableList` |
+| 多层树，节点通过统一类型表达 | `TreeListController<TNode, TKey>` | `TreeList`、`BusinessSortedTree`、`CallbackTree` |
+
+简单页面可使用数据访问函数和控制器的 `OnItemRender`；需要复用整套数据访问、显示和清理逻辑时使用 Adapter。两种入口在构造时二选一，排序、展开和定位接口相同。红点、解锁、阅读状态及祖先汇总由业务维护，修改后统一 `Submit`。
+
+详见[分组折叠](Packages/com.zr.list/Documentation~/ExpandableLists.md)、[多层折叠](Packages/com.zr.list/Documentation~/TreeLists.md)、[回调示例源码](Packages/com.zr.list/Samples~/Basic/Scripts/Showcase/CallbackTreeDemo.cs)与[性能及 GC 边界](Packages/com.zr.list/Documentation~/Performance.md)。
+
 ## 示例
 
 | 场景 | 内容 |
@@ -96,6 +111,10 @@ void OnItemRender(ScrollItemView item, int dataIndex)
 | `RewardReveal` | 按行虚拟化的奖励道具逐个弹出 |
 | `DirectRewardReveal` | 无行节点的奖励逐个弹出、重播和跳过 |
 | `Chat` | 多种消息模板、换行测量、发送和回复 |
+| `ExpandableList` | 分组折叠、业务排序、状态更新与阅读位置保持 |
+| `TreeList` | 活动／章节／小节／任务四层折叠、同级排序与祖先链自动展开定位 |
+| `BusinessSortedTree` | 红点／解锁／未读独立开关、ID 排序、祖先状态汇总与排序前后对照 |
+| `CallbackTree` | OnItemRender 回调接入三层折叠树、未读排序、视图清理与隐藏课程定位 |
 | `VerticalNestedHorizontal` | 垂直列表嵌套水平列表，两层均虚拟化 |
 | `HorizontalNestedVertical` | 水平列表嵌套垂直列表，两层均虚拟化 |
 
@@ -126,7 +145,7 @@ void OnItemRender(ScrollItemView item, int dataIndex)
 ```text
 Packages/com.zr.list/
   Runtime/          # 列表、网格、适配器、视图与复用池
-  Samples~/Basic/   # 十个可导入的示例及编辑器生成器
+  Samples~/Basic/   # 十四个可导入的示例及编辑器生成器
   Documentation~/  # API、接入方式与能力边界
   package.json
   README.md
@@ -140,6 +159,10 @@ Packages/com.zr.list/
 ## 文档与反馈
 
 - [完整使用说明](Packages/com.zr.list/Documentation~/Usage.md)
+- [安装与升级](Packages/com.zr.list/Documentation~/Upgrading.md)
+- [分组折叠](Packages/com.zr.list/Documentation~/ExpandableLists.md)
+- [多层树与业务排序](Packages/com.zr.list/Documentation~/TreeLists.md)
+- [性能与 GC](Packages/com.zr.list/Documentation~/Performance.md)
 - [版本记录](Packages/com.zr.list/CHANGELOG.md)
 - [提交问题](https://github.com/zhanglinshuia-code/ZRList/issues)
 

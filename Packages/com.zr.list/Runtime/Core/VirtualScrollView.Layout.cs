@@ -238,6 +238,7 @@ namespace ZRList
         private void RenderAtOffset(float offset, bool forceBind = false)
         {
             if (!IsRendererReady) {
+                CancelJump();
                 RecycleAllVisible();
                 SetOffset(0f);
                 return;

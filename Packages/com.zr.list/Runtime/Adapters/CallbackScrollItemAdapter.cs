@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace ZRList
 {
-    internal sealed class CallbackScrollItemAdapter: IScrollItemAdapter, IScrollItemPrefabProvider, IScrollItemViewLifecycle
+    internal sealed class CallbackScrollItemAdapter: IScrollItemAdapter, IScrollItemPrefabProvider, IScrollItemViewLifecycle, IScrollItemRenderState
     {
         public RectTransform DefaultPrefab;
         public Func<int, RectTransform> PrefabSelector;
@@ -16,6 +16,7 @@ namespace ZRList
         public Action<ScrollItemView, int> Render;
         public Action<ScrollItemView, int> Recycle;
         public float EstimatedItemSize { get; set; }
+        public bool IsRendererReady { get { return Render != null; } }
 
         public void ClearPrefabSelection()
         {

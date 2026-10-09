@@ -53,6 +53,10 @@ namespace ZRList.Samples.Editor
             CreateChatScene(new[] { incoming, outgoing, incomingInfo, outgoingWarm, incomingAlert });
             GenerateNested();
             GenerateCurved();
+            GenerateExpandable();
+            GenerateTree();
+            GenerateBusinessSortedTree();
+            GenerateCallbackTree();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             var buildScenes = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
@@ -67,7 +71,11 @@ namespace ZRList.Samples.Editor
                 "CurvedScroll",
                 "Chat",
                 "VerticalNestedHorizontal",
-                "HorizontalNestedVertical"
+                "HorizontalNestedVertical",
+                "ExpandableList",
+                "TreeList",
+                "BusinessSortedTree",
+                "CallbackTree"
             }
             ) {
                 string path = ScenePath(name);

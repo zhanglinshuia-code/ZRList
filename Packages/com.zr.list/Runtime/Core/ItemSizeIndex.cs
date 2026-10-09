@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Collections.Generic;
 
 namespace ZRList
 {
@@ -76,6 +77,29 @@ namespace ZRList
             Array.Resize(ref m_tree, capacity + 1);
         }
 
+        // The tree is scratch storage until every old size has been read. Reusing it
+        // avoids a second size array for permutations, including cycles and growth.
+        public void ResetMapped(IReadOnlyList<ScrollItemUpdate> items, float estimate, float spacing)
+        {
+            int count = items.Count;
+            EnsureCapacity(count);
+            for (int i = 0; i < count; ++i) {
+                ScrollItemUpdate item = items[i];
+                m_tree[i + 1] = item.PreserveSize && item.PreviousIndex >= 0 ? m_sizes[item.PreviousIndex] : estimate;
+            }
+
+            for (int i = 0; i < count; ++i) {
+                m_sizes[i] = (float)m_tree[i + 1];
+            }
+
+            ++Version;
+            m_count = count;
+            m_estimate = estimate;
+            m_spacing = spacing;
+            UpdateSearchBit();
+            RebuildTree();
+        }
+
         public void Append(int count)
         {
             if (count < 0 || count > int.MaxValue - 1 - Count) {
@@ -131,6 +155,11 @@ namespace ZRList
 
             ++Version;
             m_spacing = itemSpacing;
+            RebuildTree();
+        }
+
+        private void RebuildTree()
+        {
             Array.Clear(m_tree, 0, Count + (m_tree.Length > 0 ? 1 : 0));
             m_totalSize = 0d;
             for (int i = 1; i <= Count; ++i) {

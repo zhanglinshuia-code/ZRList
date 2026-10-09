@@ -21,7 +21,7 @@ namespace ZRList
 
         private void NotifyViewStateChanged()
         {
-            if (m_notifyingViewState || m_rebuilding || m_flushing || m_preparingLayout || m_runningQueuedJump || m_deferredLayoutRefresh || m_updateDepth > 0 || m_lifecycleCallbackDepth > 0) {
+            if (m_notifyingViewState || m_applyingData || m_rebuilding || m_flushing || m_preparingLayout || m_runningQueuedJump || m_deferredLayoutRefresh || m_updateDepth > 0 || m_lifecycleCallbackDepth > 0) {
                 return;
             }
 

@@ -1,0 +1,5 @@
+{
+    "name": "ZRList.Expandable.Tests",
+    "references": ["ZRList.Runtime", "UnityEngine.UI"],
+    "includePlatforms": ["Editor"]
+}

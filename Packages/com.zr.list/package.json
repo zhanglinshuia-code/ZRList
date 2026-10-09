@@ -1,8 +1,8 @@
 {
     "name": "com.zr.list",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "displayName": "ZRList",
-    "description": "Recycled uGUI lists, nested horizontal and vertical lists, heterogeneous item prefabs and virtual grids with animated navigation.",
+    "description": "Recycled uGUI lists, expandable groups and trees, nested horizontal and vertical lists, heterogeneous item prefabs and virtual grids with animated navigation.",
     "unity": "2021.3",
     "license": "Apache-2.0",
     "author": {
@@ -30,7 +30,7 @@
     "samples": [
         {
             "displayName": "ZRList Demos",
-            "description": "Ten ready-to-play list, curved scroll, nested list, inventory, item drag, row-based and direct-cell reward reveal, and chat scenes with editable prefabs and a scene builder.",
+            "description": "Fourteen ready-to-play list, expandable group and tree with Adapter and OnItemRender examples, business sorting, curved scroll, nested list, inventory, item drag, row-based and direct-cell reward reveal, and chat scenes with editable prefabs and a scene builder.",
             "path": "Samples~/Basic"
         }
     ]

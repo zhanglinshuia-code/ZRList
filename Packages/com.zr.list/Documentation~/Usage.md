@@ -1,6 +1,6 @@
 # ZRList 使用说明
 
-安装方式见[包说明](../README.md)，更新方式见[升级说明](../README.md#升级)。默认安装地址跟踪 `main` 分支，需要固定版本时使用发布标签。以下示例路径均相对于 Package Manager 导入的 **ZRList Demos** 目录。
+安装方式见[包说明](../README.md)，更新方式见[1.0.2 升级说明](Upgrading.md)。默认安装地址跟踪 `main` 分支，需要固定版本时使用发布标签。以下示例路径均相对于 Package Manager 导入的 **ZRList Demos** 目录。
 
 ## Unity 与输入兼容性
 
@@ -24,6 +24,10 @@
 | `Chat.unity` | 400 条初始聊天消息；他人在左、自己在右，输入发送、添加回复、按文字换行测量高度 |
 | `VerticalNestedHorizontal.unity` | 120 个垂直分组，每组 80–108 个水平卡片；上下拖动外层，左右拖动内层 |
 | `HorizontalNestedVertical.unity` | 120 个水平分组，每组 80–108 个垂直卡片；左右拖动外层，上下拖动内层 |
+| `ExpandableList.unity` | 一级分组折叠、业务状态排序、全部展开／收起与隐藏子项定位 |
+| `TreeList.unity` | 活动／章节／小节／任务四层折叠、状态汇总、祖先链展开定位 |
+| `BusinessSortedTree.unity` | 红点／解锁／未读三个独立开关、同级业务排序与分组排序前后对照 |
+| `CallbackTree.unity` | OnItemRender 回调接入三层折叠树、未读排序、视图清理和隐藏课程定位 |
 
 `Prefabs/Showcase/` 包含可直接编辑的 `VerticalCard`、`HorizontalCard`、`InventorySlot`、`InventoryRow`，以及 `ChatIncoming`、`ChatOutgoing`、`ChatIncomingInfo`、`ChatOutgoingWarm`、`ChatIncomingAlert` 等真实 prefab。聊天通过数组配置任意数量的模板，场景默认展示五种样式；背包 `InventoryGrid` 和逐个弹出的 `DirectRewardReveal` 都直接在 Content 下复用格子；`InventoryRow` 供原有行网格示例使用。按钮、输入框、EventSystem 和所有组件引用都已保存到场景。
 
@@ -31,7 +35,7 @@
 
 按住内层时会停止祖先列表的惯性。`VirtualScrollRect` 按开始拖拽时的主方向选择内层或最近的可用父层，并将父层手势的 `pointerDrag` 交给父对象，使发起手势的分组回收后仍能继续拖动。滚轮也按主轴分配：垂直滚轮操作垂直层，水平滚轮操作水平层；没有对应父层时保留普通单列表的滚轮行为。嵌套的两个方向分别锁定，内层 Viewport 使用 `RectMask2D` 裁剪。
 
-Unity 菜单 **Tools → ZRList → Rebuild Showcase Assets** 可以重新生成十个场景与十六个 prefab，并添加到 Build Settings；**Rebuild Nested Assets** 只生成两个嵌套场景与四个嵌套 prefab。**Rebuild Item Drag Assets** 只生成物品拖拽场景，**Rebuild Reward Reveal Assets** 只生成原奖励弹出场景及 `RewardSlot` prefab；**Rebuild Direct Reward Reveal Assets** 单独生成无行节点的逐个弹出场景。生成前会提示保存当前修改过的场景。
+Unity 菜单 **Tools → ZRList → Rebuild Showcase Assets** 可以重新生成十四个场景及其预制体，并添加到 Build Settings；**Rebuild Nested Assets** 只生成两个嵌套场景与四个嵌套 prefab。**Rebuild Item Drag Assets** 只生成物品拖拽场景，**Rebuild Reward Reveal Assets** 只生成原奖励弹出场景及 `RewardSlot` prefab；**Rebuild Direct Reward Reveal Assets** 单独生成无行节点的逐个弹出场景。四个折叠场景分别对应 **Rebuild Expandable List Assets**、**Rebuild Tree List Assets**、**Rebuild Business Sorted Tree Assets** 和 **Rebuild Callback Tree Assets**。生成前会提示保存当前修改过的场景。
 
 `DirectRewardReveal.unity` 是独立的无行节点道具弹出示例：进入 Play Mode 后，24 个格子按 0.12 秒间隔依次淡入、上弹、缩放回弹。层级为 `ScrollView/Viewport/Content/RewardSlot/Visual`，Content 的每个直接子节点都是一个道具格子，Visual 仅负责该格子的动画。`DirectRewardRevealDemo` 使用 `DirectGridView`，无需 `InventoryRow`、`RowScrollView` 或 `VirtualGridView`。**Receive rewards** 重播，**Show all now** 立即显示全部；Inspector 可调整数量、初始延迟、出现间隔、动画时长、上弹距离和回弹幅度。大量道具仍按格子复用，刷新和回收按数据索引恢复动画进度。菜单 **Tools → ZRList → Rebuild Direct Reward Reveal Assets** 可单独重建。 默认内容超过一屏，可从道具区域或空白处拖动，也可用滚轮滚动；内容高度不超过视口时没有可滚动距离。
 
@@ -231,6 +235,40 @@ grid.ReloadData(newCount);
 
 格子优先保留在所属行中，模板变化后按源 prefab 进入独立的闲置池，可在不同行之间复用，保留 `CachedComponent`；换模板不会持续销毁原格子。`PooledCellCount` 返回闲置格子总数，`grid.TrimPool()` 释放闲置行和格子，`grid.TrimPool(retainedCellCount)` 保留指定总数的闲置格子。`Dispose` 释放所有行、格子和对象缓存，包括生命周期回调抛错后的其余资源。
 
+## 分组折叠列表
+
+使用 `ExpandableListController<TGroup, TItem, TKey>` 接入一级分组，多层嵌套使用 `TreeListController<TNode, TKey>`。简单页面可通过数据访问函数、显示策略和 `OnItemRender` 接入；需要整套复用绑定逻辑时，继承 `ExpandableListAdapter` 或 `TreeListAdapter` 并通过 Adapter 构造入口接入。控制器独占一个未初始化的 `VirtualScrollView`，要求 `FirstDataIndex = 0`。下面先展示回调模式。
+
+```csharp
+// 数据访问方法在构造后固定；内部沿用业务模型，不复制业务状态。
+var tree = new TreeListController<Node, int>(scrollView, GetNodeKey, GetChildren)
+{
+    EstimatedItemSize = 64f,
+    ItemPrefabSelector = SelectItemPrefab,
+    NodeComparison = CompareBusinessPriority
+};
+tree.OnItemRender += OnItemRender;
+tree.Submit(roots);
+
+void OnItemRender(ScrollItemView view, TreeListRow<Node, int> row)
+{
+    if (view.CachedComponent == null) {
+        view.CachedComponent = new NodeView(view.Root);
+    }
+    ((NodeView)view.CachedComponent).Render(row.Node, row.Depth, row.IsExpanded);
+}
+```
+
+业务提供稳定 Key、父子关系、状态汇总、排序规则和显示内容。控制器管理展开状态，执行排序，将树转成线性可见行；底层列表负责虚拟化、池、尺寸和滚动。业务修改红点、解锁、阅读或结构并更新汇总后，只需调用一次 `Submit`，同时完成内容、结构和顺序更新，并按 Key 保持展开状态和阅读锚点。滚动时不会重新读取整棵树或重新排序。
+
+`OnItemRender` 的第二个参数是行上下文：一级分组提供 `IsHeader`、`Group`、`Item`，树提供 `Node`、`Depth`、`HasChildren` 和 `IsExpanded`。可在 `Submit` 后订阅；未订阅时不创建空白 item。列表启用时，订阅增删立即刷新，移除最后一个渲染订阅后回收可见项但保留池；禁用时延至重新启用后处理。导航可能临时绑定屏外项进行测量，因此该回调不代表曝光或阅读。不要同时使用底层 `scrollView.OnItemRender` 渲染折叠行。
+
+需要强类型视图或自定义尺寸时配置 `ViewFactory`、`ItemSizeProvider` 和 `ItemMeasurer`。`EstimatedItemSize` 默认 100。通过 `OnItemRecycle(view, oldRow)` 结束旧绑定，包括重绑及回收；通过 `OnViewDestroyed(view)` 释放物理视图资源。`ViewFactory` 和这两个清理事件必须在渲染器初始化前配置，不能在初始化后改变；模板和尺寸策略修改后通过 `Submit` 应用。`Dispose` 完成清理后再清空委托，不应提前取消清理订阅。所有回调内禁止重入修改控制器。
+
+`ExpandableList`、`TreeList` 和 `BusinessSortedTree` 演示 Adapter 接入，分别使用 `ChapterListAdapter`、`CampaignTreeAdapter` 和 `BusinessPriorityTreeAdapter`。Adapter 的 `Bind` 负责渲染，`CreateView` 缓存组件，`Unbind` 结束旧绑定，`DestroyView` 清理实例资源。Adapter 模式不可再配置上述显示回调，排序、展开与提交接口则完全相同。控制器直接实现底层接口，两种入口无需额外 Bridge；数据访问委托只在构造时缓存。完整示例见[分组折叠](ExpandableLists.md#通过-adapter-复用绑定逻辑)和[多层折叠](TreeLists.md#通过-adapter-复用绑定逻辑)。
+
+需要完整的 `OnItemRender` 示例时，打开 `Scenes/CallbackTree.unity`。脚本 [CallbackTreeDemo.cs](../Samples~/Basic/Scripts/Showcase/CallbackTreeDemo.cs) 直接配置函数构造入口，并订阅控制器的 `OnItemRender`、`OnItemRecycle`、`OnViewDestroyed`；组件和按钮监听只在 `ViewFactory` 中创建一次。完整接口与约定见[一级分组折叠](ExpandableLists.md)和[多层折叠列表](TreeLists.md)。
+
 ## 内容和尺寸更新
 
 ```csharp
@@ -308,7 +346,7 @@ Bind 应完整覆盖会变化的显示状态。异步绑定结果同样需要验
 当前支持具有首尾边界的线性列表、任意数量的 item prefab 与固定尺寸竖向网格，以下能力尚未实现：
 
 - 真正无首尾的无限循环、不同高度格子的网格和瀑布流。
-- 基于稳定数据 ID 的增删、移动和排序事务；ReloadData 会重置位置，不能当作局部集合更新接口。
+- 吸顶分组和分组网格。线性序列增删、移动与重排可使用 `ApplyData`；一级分组可用 `ExpandableListController`，多层树可用 `TreeListController` 按稳定 Key 提交。`ReloadData` 仍会重置位置。
 - 每帧测量预算、后台分页和取消任务调度；异步任务与数据加载由业务持有。
 - 超长列表的坐标重基准和稀疏索引。当前索引占用 O(n) 内存，最终 Unity 坐标为 float；超大数据集需要分页或进一步设计。
 

@@ -2,10 +2,10 @@
 
 English | [简体中文](README.md)
 
-Virtualized lists and grids for Unity uGUI. Create and reuse views for visible items, with horizontal and vertical scrolling, dynamic item sizes, multiple prefabs, nested scrolling, and animated navigation.
+Virtualized lists and grids for Unity uGUI. Create and reuse views for visible items, with horizontal and vertical scrolling, dynamic item sizes, multiple prefabs, expandable groups and trees, nested scrolling, and animated navigation.
 
 - Unity **2021.3 LTS or later**, including Unity 6.
-- UPM package: `com.zr.list`, version **1.0.1**.
+- UPM package: `com.zr.list`, version **1.0.2**.
 - The runtime depends only on `com.unity.ugui`.
 - License: [Apache-2.0](LICENSE.md).
 
@@ -40,7 +40,7 @@ https://github.com/zhanglinshuia-code/ZRList.git?path=/Packages/com.zr.list#main
 This tracks the `main` branch. To pin a release instead, use a version tag:
 
 ```text
-https://github.com/zhanglinshuia-code/ZRList.git?path=/Packages/com.zr.list#v1.0.1
+https://github.com/zhanglinshuia-code/ZRList.git?path=/Packages/com.zr.list#v1.0.2
 ```
 
 You can also download the repository and use **Add package from disk** to select `Packages/com.zr.list/package.json`.
@@ -49,9 +49,12 @@ After installation, expand the package's **Samples**, import **ZRList Demos**, a
 
 ## Updating
 
+The current release is **1.0.2**. See the [upgrade guide (Chinese)](Documentation~/Upgrading.md) for source-specific steps and troubleshooting. The public `ZRList.GameObjectPool` utility was removed; applications that used it directly must migrate to their own pool. The list's internal view pool is unchanged.
+
 - **Installed from `#main`:** select **ZRList** in Package Manager and use **Update** when available. Otherwise, add the same Git URL again to resolve the branch's current commit. New commits are not installed automatically.
 - **Installed from a version tag:** add the Git URL with the new tag to upgrade, or switch to `#main`. Updating a pinned tag does not select a newer release tag automatically.
-- **Demo scenes:** reimport **ZRList Demos** after upgrading. Previously imported copies under `Assets/Samples` do not update with the package.
+- **Local or embedded copies:** update those files yourself or switch to the Git URL. An embedded `Packages/com.zr.list` folder takes precedence over a Git dependency.
+- **Demo scenes:** reimport **ZRList Demos** after upgrading, then open `Assets/Samples/ZRList/1.0.2/ZRList Demos/Scenes`. Previously imported copies do not update with the package. Back up customized demos outside `Assets` before replacing them; keep only one source copy to avoid duplicate assemblies/types.
 
 Git dependencies record their resolved commit in the project lock file. See [Unity's Git dependency documentation](https://docs.unity3d.com/6000.0/Documentation/Manual/upm-git.html#git-locks) for resolution and update behavior.
 
@@ -93,6 +96,16 @@ After changing text or layout data, call `RefreshItem`. `SetItemSize` updates th
 
 `StretchItems` is off by default, preserving each prefab's cross-axis size. Enable it to fill the available width in a vertical list or height in a horizontal list.
 
+## Expandable lists and trees
+
+Use `ExpandableListController<TGroup, TItem, TKey>` for one-level groups with different header/item types, or `TreeListController<TNode, TKey>` for deeper nesting.
+
+Choose the function/callback constructor for a simple page and subscribe to the controller's `OnItemRender`. Choose `ExpandableListAdapter` or `TreeListAdapter` to reuse data access, view binding, sizing and cleanup together; render through `Bind` in that mode. The two rendering configurations are mutually exclusive. Both support the same submission, sorting, expansion and navigation operations.
+
+Your application owns notification, unlock/read flags, ancestor summaries and comparison rules. Update those values, then call `Submit` once. The controller preserves expansion and the reading anchor by stable keys. Rendering may also run for off-screen measurement and must not mark data as read.
+
+`ExpandableList`, `TreeList` and `BusinessSortedTree` demonstrate Adapter integration. [CallbackTreeDemo.cs](Samples~/Basic/Scripts/Showcase/CallbackTreeDemo.cs) demonstrates direct callbacks, cached components/listeners, recycling and destruction. See the detailed [group guide](Documentation~/ExpandableLists.md), [tree guide](Documentation~/TreeLists.md) and [performance notes](Documentation~/Performance.md) (Chinese).
+
 ## Sample scenes
 
 | Scene | Demonstrates |
@@ -105,6 +118,10 @@ After changing text or layout data, call `RefreshItem`. `SetItemSize` updates th
 | `RewardReveal` | Sequential reward animations using virtualized rows |
 | `DirectRewardReveal` | Sequential reward animations without row objects, plus replay and skip |
 | `Chat` | Multiple message prefabs, wrapped text measurement, sending, and replies |
+| `ExpandableList` | Group folding, injected business ordering, state updates, and viewport anchoring |
+| `TreeList` | Four-level folding, sibling ordering, retained descendant state, and hidden-node navigation |
+| `BusinessSortedTree` | Independent notification/unlock/unread controls, ID ties, ancestor aggregation, and before/after ordering |
+| `CallbackTree` | OnItemRender callbacks, three-level folding, unread ordering, view cleanup, and hidden-lesson navigation |
 | `VerticalNestedHorizontal` | A vertical list of horizontal lists, virtualized at both levels |
 | `HorizontalNestedVertical` | A horizontal list of vertical lists, virtualized at both levels |
 
@@ -126,7 +143,7 @@ The demos' `DemoInputModule` selects an input module based on the host project's
 
 Input System is optional; the runtime requires only uGUI. There is no need to change the host project's input settings.
 
-The project's recorded compatibility checks cover all ten demos, including clicking, dragging, wheel input, and chat input focus:
+The project's recorded compatibility checks cover the original ten demos, including clicking, dragging, wheel input, and chat input focus:
 
 | Unity version | Verified input configurations |
 | --- | --- |
@@ -136,6 +153,8 @@ The project's recorded compatibility checks cover all ten demos, including click
 
 Additional checks cover a Unity 6 Windows IL2CPP player with High managed stripping and Input System, and rebuilding the demo scenes in Unity 2021.3.
 
+The four folding scenes passed Unity 2022.3.5f1 Play Mode interaction checks. Both callback and Adapter runtime suites also passed Unity 2021.3.45f1, including warmed allocation checks. These results do not extend the original input-backend test matrix to every new scene.
+
 When upgrading from **1.0.0**, install `main` or `v1.0.1` or later and reimport the demos to receive the input compatibility fixes. For customized older scenes, replace the EventSystem's `StandaloneInputModule` with `DemoInputModule`.
 
 ## Package layout
@@ -143,7 +162,7 @@ When upgrading from **1.0.0**, install `main` or `v1.0.1` or later and reimport 
 ```text
 Packages/com.zr.list/
   Runtime/          # Lists, grids, adapters, views, and pooling
-  Samples~/Basic/   # Ten importable demos and editor scene builders
+  Samples~/Basic/   # Fourteen importable demos and editor scene builders
   Documentation~/  # Usage guide and demo GIFs
   package.json
   README.md
@@ -158,6 +177,10 @@ Samples enter your project's compilation only after import.
 ## Documentation and feedback
 
 - [Detailed usage guide (Chinese)](Documentation~/Usage.md)
+- [Installation and upgrade guide (Chinese)](Documentation~/Upgrading.md)
+- [Expandable groups (Chinese)](Documentation~/ExpandableLists.md)
+- [Trees and business sorting (Chinese)](Documentation~/TreeLists.md)
+- [Performance and GC (Chinese)](Documentation~/Performance.md)
 - [Changelog](CHANGELOG.md)
 - [Report an issue](https://github.com/zhanglinshuia-code/ZRList/issues)
 
