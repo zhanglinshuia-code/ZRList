@@ -9,6 +9,8 @@ Unity uGUI 虚拟列表与网格。只创建和复用可见项，支持横向、
 - 运行库仅依赖 `com.unity.ugui`。
 - 许可证：[Apache-2.0](LICENSE)。
 
+**[▶ 浏览器在线体验全部 14 个示例](https://zhanglinshuia-code.github.io/ZRList/)**
+
 ## 安装
 
 默认跟踪 `main` 分支，方便后续通过 Package Manager 更新。Unity 菜单 **Window → Package Manager → + → Add package from git URL**，输入：

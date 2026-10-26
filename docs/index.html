@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="在浏览器中体验 ZRList 的 14 个 Unity uGUI 虚拟列表、网格、折叠树与嵌套滚动示例。">
+  <title>ZRList · 在线示例 / Live demos</title>
+  <style>
+    :root{color-scheme:dark;font-family:system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;background:#0d1521;color:#e8eef8}
+    *{box-sizing:border-box}body{margin:0}main{max-width:1440px;margin:0 auto;padding:24px}
+    header{display:flex;align-items:center;gap:18px;margin-bottom:20px}h1{font-size:26px;letter-spacing:-.8px;margin:0}h1 span{color:#73ddc8}header p{color:#94a8c3;font-size:13px;margin:4px 0 0}
+    a{color:#73ddc8;text-decoration:none}a:hover{text-decoration:underline}.repo{margin-left:auto;font-size:14px}
+    .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}label{font-size:13px;color:#94a8c3}
+    select,button{font:inherit;font-size:13px;color:#e8eef8;background:#172436;border:1px solid #33475f;border-radius:8px;padding:9px 12px}select{min-width:270px}button{cursor:pointer}button:hover{border-color:#73ddc8}button:disabled,select:disabled{opacity:.45;cursor:wait}#count{font-size:12px;color:#94a8c3;margin-left:auto}
+    #player{position:relative;width:100%;aspect-ratio:16/9;background:#101a28;border:1px solid #26384d;border-radius:12px;overflow:hidden}
+    canvas{display:block;width:100%;height:100%;outline:none}#loading{position:absolute;inset:0;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;background:#101a28}#loading[hidden]{display:none}#loading strong{font-size:20px}progress{width:min(280px,65%);height:6px;accent-color:#73ddc8}#progress-text{font-size:13px;color:#94a8c3}
+    #message{margin:12px 0;color:#ffb5aa;font-size:13px;overflow-wrap:anywhere}footer{display:flex;gap:20px;flex-wrap:wrap;justify-content:space-between;font-size:12px;color:#94a8c3;margin-top:14px;line-height:1.7}footer p{margin:0}
+    @media(max-width:700px){main{padding:14px}header{gap:12px}h1{font-size:23px}header p{font-size:11px}select{min-width:0;flex:1}#count{display:none}.toolbar{gap:8px}button{padding:9px}#player{border-radius:8px}}
+  </style>
+</head>
+<body>
+  <main>
+    <header><div><h1>ZR<span>List</span></h1><p>Unity uGUI · 虚拟列表、网格与折叠树 / Interactive demos</p></div><a class="repo" href="https://github.com/zhanglinshuia-code/ZRList" target="_blank" rel="noopener">GitHub ↗</a></header>
+    <div class="toolbar">
+      <label for="scene">示例 / Demo</label><select id="scene" disabled></select>
+      <button id="previous" disabled aria-label="上一个示例 / Previous demo">←</button><button id="next" disabled aria-label="下一个示例 / Next demo">→</button>
+      <button id="restart" disabled>重置 / Reset</button><button id="fullscreen" disabled>全屏 / Fullscreen</button><span id="count">14 个交互示例</span>
+    </div>
+    <div id="player"><canvas id="unity-canvas" width="1280" height="720" tabindex="0" aria-label="ZRList 交互示例"></canvas><div id="loading"><strong>ZRList</strong><progress id="progress" max="1" value="0"></progress><span id="progress-text">正在加载 / Loading…</span></div></div>
+    <p id="message" role="alert" hidden></p>
+    <footer><p>拖拽或滚轮滚动，点击示例中的按钮体验各项功能。<br>Drag or scroll to explore. Use the buttons inside each demo.</p><p>ZRList 1.0.3 · <a href="https://github.com/zhanglinshuia-code/ZRList#安装">安装 / Install</a> · <a href="LICENSE.txt">Apache-2.0</a></p></footer>
+  </main>
+  <script>
+    const demos = [
+      ["VerticalList","纵向列表 / Vertical list"], ["HorizontalList","横向列表 / Horizontal list"],
+      ["InventoryGrid","背包网格 / Inventory grid"], ["ItemDrag","物品拖拽 / Item dragging"],
+      ["CurvedScroll","曲线列表 / Curved scroll"], ["RewardReveal","按行奖励展示 / Row reward reveal"],
+      ["DirectRewardReveal","奖励逐个展示 / Direct reward reveal"], ["Chat","聊天列表 / Chat"],
+      ["ExpandableList","分组折叠 / Expandable list"], ["TreeList","多层折叠树 / Tree list"],
+      ["BusinessSortedTree","业务排序树 / Business sorted tree"], ["CallbackTree","回调折叠树 / Callback tree"],
+      ["VerticalNestedHorizontal","纵向嵌套横向 / Vertical → horizontal"], ["HorizontalNestedVertical","横向嵌套纵向 / Horizontal → vertical"]
+    ];
+    const canvas = document.getElementById("unity-canvas"), selector = document.getElementById("scene");
+    const loading = document.getElementById("loading"), progress = document.getElementById("progress"), progressText = document.getElementById("progress-text"), message = document.getElementById("message");
+    let player;
+    for (const [name,title] of demos) selector.add(new Option(title,name));
+    const initial = new URLSearchParams(location.search).get("demo");
+    if (demos.some(([name]) => name === initial)) selector.value = initial;
+    function selectScene() {
+      if (!player) return;
+      player.SendMessage("WebGLDemoNavigator", "SelectScene", selector.value);
+      const url = new URL(location.href); url.searchParams.set("demo", selector.value); history.replaceState(null,"",url);
+      document.getElementById("count").textContent = `${selector.selectedIndex + 1} / ${demos.length}`;
+      canvas.focus();
+    }
+    function showError(text) { message.textContent = String(text); message.hidden = false; }
+    selector.onchange = selectScene;
+    document.getElementById("previous").onclick = () => { selector.selectedIndex = (selector.selectedIndex + demos.length - 1) % demos.length; selectScene(); };
+    document.getElementById("next").onclick = () => { selector.selectedIndex = (selector.selectedIndex + 1) % demos.length; selectScene(); };
+    document.getElementById("restart").onclick = selectScene;
+    document.getElementById("fullscreen").onclick = () => player && player.SetFullscreen(1);
+    canvas.addEventListener("wheel", event => event.preventDefault(), {passive:false});
+    const script = document.createElement("script");
+    script.src = "Build/docs.loader.js";
+    script.onerror = () => { progressText.textContent = "加载失败 / Loading failed"; showError("无法下载播放器，请刷新重试。Unable to download the player. Please reload."); };
+    script.onload = () => createUnityInstance(canvas, {
+      dataUrl: "Build/1b8f3ad36406ce1356152bf84036de7e.data.unityweb", frameworkUrl: "Build/6e1a859e6c1e940067b784ee32163c96.js.unityweb", codeUrl: "Build/cc2a879ef849278769b5cf4147345d5b.wasm.unityweb",
+      streamingAssetsUrl: "StreamingAssets", companyName: "zhanglinshuia-code", productName: "ZRList", productVersion: "1.0.3",
+      devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+      showBanner: (text,type) => { if (type === "error") showError(text); }
+    }, value => { progress.value = value; progressText.textContent = `正在加载 / Loading ${Math.round(value * 100)}%`; }).then(instance => {
+      player = instance; loading.hidden = true;
+      document.querySelectorAll("button,select").forEach(control => control.disabled = false);
+      if (selector.value !== "VerticalList") selectScene();
+      else document.getElementById("count").textContent = `1 / ${demos.length}`;
+    }).catch(error => { progressText.textContent = "加载失败 / Loading failed"; showError(error); });
+    document.body.appendChild(script);
+  </script>
+</body>
+</html>
